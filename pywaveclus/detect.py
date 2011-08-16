@@ -67,7 +67,7 @@ def find_threshold_crossings(data, threshold, direction = 'neg'):
     if direction == 'both':
         return np.union1d(np.where(data > threshold)[0], np.where(data < -threshold)[0])
 
-def find_spikes(data, threshold, direction = 'neg', prew = 31, postw = 32, ref = 32):
+def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref = 66):
     """
     Find spikes within a single recording
     
@@ -149,7 +149,7 @@ def test_find_spikes(plot=False):
     t = np.arange(Fs, dtype=np.float64)/ float(Fs)
     swf = [0., 0.2, 0.4, 0.8, 1.6, 1.4, 0.8, 0.3, -0.6, -0.8, -0.5, -0.3, 0.]
     peakoffset = 4
-    sts = [4410, 8810]
+    sts = [4410, 8820]
     x = pl.randn(len(t)) / 10.
     for st in sts:
         x[st-peakoffset:st-peakoffset+len(swf)] += swf
