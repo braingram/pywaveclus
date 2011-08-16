@@ -32,13 +32,13 @@ def test_ks(coeffs):
     # deltacdf  =  abs([delta1 ; delta2]);
     # 
     # KSmax =  max(deltacdf);
-    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs),'norm')
+    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs,ddof=1),'norm')
     return d
 
 def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
     """
     Given an array of spike waveforms, determine the best wavlet coefficients for clustering
-    by using the Klomogorov-Smirnov test.
+    by using the Kolmogorov-Smirnov test.
         Was wave_features in WaveClus
     
     Parameters
@@ -76,7 +76,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
     # KS test for coefficient selection
     coefffitness = np.zeros(ncoeffs)
     for i in xrange(ncoeffs):
-        thrdist = np.std(coeffs[:,i]) * 3
+        thrdist = np.std(coeffs[:,i],ddof=1) * 3
         thrdistmin = np.mean(coeffs[:,i]) - thrdist
         thrdistmax = np.mean(coeffs[:,i]) + thrdist
         # test for how many points lie within 3 std dev of mean
@@ -84,7 +84,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
         if len(culledcoeffs) > 10:
             coefffitness[i] = test_ks(culledcoeffs)
         # else 0 (see coefffitness definition)
-    
+    print coefffitness
     # store the indices of the 'good' coefficients
     ind = np.argsort(coefffitness)
     goodcoeff = ind[::-1][:nfeatures]
@@ -92,7 +92,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
     # print ind
     
     # this returns features
-    return waveforms[:,goodcoeff]
+    return coeffs[:,goodcoeff]
 
 def test_wavelet_features(plot=False):
     import pylab as pl

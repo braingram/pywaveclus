@@ -160,7 +160,7 @@ for (color, cluster) in zip(colors,clusters):
         for y in xrange(nfeatures):
             if x > y:
                 pl.subplot(nfeatures,nfeatures,x+y*nfeatures+1)
-                pl.scatter(features[:,x], features[:,y], s=10, alpha=0.5, edgecolors=None)
+                pl.scatter(features[:,x], features[:,y], s=10, alpha=0.5, c=color, edgecolors=None)
 
 # set axes for features figure (3)
 pl.figure(3)
@@ -175,6 +175,7 @@ for x in xrange(nfeatures):
             pl.xlim(spikefeatures[:,x].min()-xr*b, spikefeatures[:,x].max()+xr*b)
             yr = spikefeatures[:,y].max() - spikefeatures[:,y].min()
             pl.ylim(spikefeatures[:,y].min()-yr*b, spikefeatures[:,y].max()+yr*b)
+
 pl.figure(4)
 pl.imshow(tree, interpolation='nearest')
 
