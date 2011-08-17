@@ -24,7 +24,8 @@ def get_os():
         raise ValueError("Unknown operating system: %s" % sys.platform)
 
 def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
-        swcycles = 100, knn = 11, minclus = None, minperc = 0.25, nclusters = 5):
+        swcycles = 100, knn = 11, minclus = None, minperc = 0.25, nclusters = 5,
+        quiet = True):
     """
     Super-paramagnetic clustering
     
@@ -51,6 +52,8 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
         Only used when minclus is None
     nclusters : int
         Number of clusters to return
+    quiet : bool
+        Suppress the spc executable stdout
     
     Returns
     -------
@@ -111,7 +114,11 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     # run executable
     olddir = os.getcwd()
     os.chdir(tempdir)
-    retcode = subprocess.call(['./spc_' + get_os(), runfilename])
+    if quiet:
+        with open(os.devnull, 'w') as fp:
+            retcode = subprocess.call(['./spc_' + get_os(), runfilename], stdout=fp)
+    else:
+        retcode = subprocess.call(['./spc_' + get_os(), runfilename])
     os.chdir(olddir)
     logging.debug("Clustering returned: %i" % retcode)
     

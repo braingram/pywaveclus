@@ -7,7 +7,7 @@ import scipy.stats
 
 import pywt
 
-def test_ks(coeffs):
+def ks(coeffs):
     """
     A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution to norm
     
@@ -71,7 +71,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
         # test for how many points lie within 3 std dev of mean
         culledcoeffs = coeffs[(coeffs[:,i] > thrdistmin) & (coeffs[:,i] < thrdistmax),i]
         if len(culledcoeffs) > 10:
-            coefffitness[i] = test_ks(culledcoeffs)
+            coefffitness[i] = ks(culledcoeffs)
         # else 0 (see coefffitness definition)
     # print coefffitness
     # store the indices of the 'good' coefficients
