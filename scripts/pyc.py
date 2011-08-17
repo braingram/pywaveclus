@@ -20,52 +20,52 @@ filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/clip.wav'
 # filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/input_14#01.wav'
 # filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/input_3#01.wav'
 
-parser = OptionParser(usage="usage: %prog [options] recording.wav")
+parser = OptionParser(usage="usage: %prog [options] recording.wav [output_directory]")
 parser.add_option("-b", "--baselineTime", dest = "baselineTime",
                     help = "number of samples at beginning of recording used to calculate spike threshold",
                     default = 441000)
 parser.add_option("-c", "--chunkSize", dest = "chunkSize",
                     help = "data is processed in chunks (to reduce mem usage). Number of samples to read per chunk",
                     default = 441000)
-parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
-                    help = "number of samples to overlap chunks",
-                    default = 4410) # TODO better explanation
 parser.add_option("-d", "--detectionDirection", dest = "detectionDirection",
                     help = "pos, neg, or both: detect spikes of a particular or both directions",
                     default = 'both')
-parser.add_option("-w", "--prew", dest = "prew",
-                    help = "number of samples prior to threshold crossing to store for each waveform",
-                    default = 40)
-parser.add_option("-W", "--postw", dest = "postw",
-                    help = "number of samples after the threshold crossing to store for each waveform",
-                    default = 88)
+parser.add_option("-e", "--plotext", dest = "plotext",
+                    help = "plot file extension",
+                    default = '.png')
 parser.add_option("-f", "--nfeatures", dest = "nfeatures",
                     help = "number of features to measure per waveform",
                     default = 10)
 parser.add_option("-H", "--filterMax", dest = "filterMax",
                     help = "maximum wavelet decomposition level for filtering (acts as a highpass)",
                     default = 6)
-parser.add_option("-L", "--filterMin", dest = "filterMin",
-                    help = "minimum wavelet decomposition level for filtering (acts as a lowpass)",
-                    default = 3)
-parser.add_option("-v", "--verbose", dest = "verbose",
-                    help = "enable verbose reporting",
-                    default = False, action = "store_true")
-parser.add_option("-p", "--plot", dest = "plot",
-                    help = "generate lots of plots",
-                    default = False, action = "store_true")
-parser.add_option("-e", "--plotext", dest = "plotext",
-                    help = "plot file extension",
-                    default = '.png')
-parser.add_option("-m", "--mat", dest = "mat",
-                    help = "save results in a mat file",
-                    default = False, action = "store_true")
 parser.add_option("-l", "--lockfile", dest = "lockfile",
                     help = "use a lockfile to prevent simultaneous disc access for >1 copy of this program",
                     default = None)
+parser.add_option("-L", "--filterMin", dest = "filterMin",
+                    help = "minimum wavelet decomposition level for filtering (acts as a lowpass)",
+                    default = 3)
+parser.add_option("-m", "--mat", dest = "mat",
+                    help = "save results in a mat file",
+                    default = False, action = "store_true")
+parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
+                    help = "number of samples to overlap chunks",
+                    default = 4410) # TODO better explanation
+parser.add_option("-p", "--plot", dest = "plot",
+                    help = "generate lots of plots",
+                    default = False, action = "store_true")
 parser.add_option("-t", "--timerange", dest = "timerange",
                     help = "time range (in samples, slice format (start:end]) over which to process the file",
                     default = ':')
+parser.add_option("-v", "--verbose", dest = "verbose",
+                    help = "enable verbose reporting",
+                    default = False, action = "store_true")
+parser.add_option("-w", "--prew", dest = "prew",
+                    help = "number of samples prior to threshold crossing to store for each waveform",
+                    default = 40)
+parser.add_option("-W", "--postw", dest = "postw",
+                    help = "number of samples after the threshold crossing to store for each waveform",
+                    default = 88)
 (options, args) = parser.parse_args()
 
 def error(string, exception=Exception):

@@ -39,6 +39,7 @@ setup(
     
     packages = ['pywaveclus','pywaveclus/tests'],
     package_data={'pywaveclus': ['bin/*']},
+    scripts=['scripts/pyc.py'],
     version='dev',
 
     include_package_data=True,
