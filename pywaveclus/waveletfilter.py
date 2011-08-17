@@ -5,6 +5,8 @@
 # With modifications by Brett Graham (08/2011)
 # This code is released under the terms of the BSD License
 
+import logging
+
 import numpy as np
 import pywt
 
@@ -126,8 +128,8 @@ def level_to_cutoffs(samplingrate, level):
     """
     return (samplingrate / 2 ** (level+1), samplingrate / 2 ** level)
 
-def test_waveletfilter():
-    import pylab as pl
+def test_waveletfilter(plot=False):
+    logging.basicConfig(level=logging.DEBUG)
     
     # make test signal
     Fs = 44100
@@ -141,16 +143,18 @@ def test_waveletfilter():
     
     filtered = waveletfilter(x, minlevel=3, maxlevel=6)
     
-    pl.subplot(221)
-    pl.plot(t,x)
-    pl.subplot(222)
-    pl.psd(x,Fs=Fs)
-    pl.subplot(223)
-    pl.plot(t,filtered)
-    pl.subplot(224)
-    pl.psd(filtered,Fs=Fs)
+    if plot:
+        import pylab as pl
+        pl.subplot(221)
+        pl.plot(t,x)
+        pl.subplot(222)
+        pl.psd(x,Fs=Fs)
+        pl.subplot(223)
+        pl.plot(t,filtered)
+        pl.subplot(224)
+        pl.psd(filtered,Fs=Fs)
     
-    pl.show()
+        pl.show()
 
 if __name__ == '__main__':
-    test_waveletfilter()
+    test_waveletfilter(True)

@@ -103,7 +103,8 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     np.savetxt(datafile, features)
     
     # copy correct executable
-    exefile = os.path.dirname(__file__) + '/bin/spc_' + get_os()
+    exefile = os.path.dirname(os.path.abspath(__file__)) + '/bin/spc_' + get_os()
+    logging.debug("Found spc executable: %s" % exefile)
     shutil.copy2(exefile, tempdir)
     exefile = 'spc_' + get_os()
     
@@ -262,7 +263,7 @@ def test_spc(plot=False):
         pl.figure()
         pl.imshow(cdata, interpolation='nearest')
         pl.show()
-    return # don't do real data for now
+    return
 
 if __name__ == '__main__':
     test_spc(True)

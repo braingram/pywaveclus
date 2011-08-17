@@ -143,14 +143,13 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
 
 def test_find_spikes(plot=False):
     logging.basicConfig(level=logging.DEBUG)
-    import pylab as pl
     # generate fake data
     Fs = 44100
     t = np.arange(Fs, dtype=np.float64)/ float(Fs)
     swf = [0., 0.2, 0.4, 0.8, 1.6, 1.4, 0.8, 0.3, -0.6, -0.8, -0.5, -0.3, 0.]
     peakoffset = 4
     sts = [4410, 8820]
-    x = pl.randn(len(t)) / 10.
+    x = np.random.randn(len(t)) / 10.
     for st in sts:
         x[st-peakoffset:st-peakoffset+len(swf)] += swf
     
@@ -162,7 +161,11 @@ def test_find_spikes(plot=False):
     bothspikes = find_spikes(x, threshold, 'both')
     invbothspikes = find_spikes(-x, threshold, 'both')
     
+    assert(sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0)
+    assert(sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0)
+    
     if plot:
+        import pylab as pl
         pl.figure()
         pl.plot(t,x)
         pl.axhline(threshold,c='r')
@@ -172,11 +175,6 @@ def test_find_spikes(plot=False):
         pl.figure()
         for swf in positivespikes[1]:
             pl.plot(swf)
-    
-    assert(sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0)
-    assert(sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0)
-    
-    if plot:
         pl.show()
 
 if __name__ == '__main__':

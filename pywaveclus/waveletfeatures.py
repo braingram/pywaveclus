@@ -84,8 +84,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
     return coeffs[:,goodcoeff]
 
 def test_wavelet_features(plot=False):
-    import pylab as pl
-    
+    logging.basicConfig(level=logging.DEBUG)
     swf1 = [0., 0.2, 0.4, 0.8, 1.6, 1.4, 0.8, 0.3, -0.6, -0.8, -0.5, -0.3, 0.]
     # swf2 = [0., 0.1, 0.5, 0.9, 1.6, 1.4, 0.4, 0.1, -0.3, -0.2, -0.1,   0., 0.]
     swf2 = [0., 0., 0.1, 0.3, 1.8, 2.1, 0.4, 0.1, -0.3, -0.2, -0.1,   0., 0.]
@@ -95,9 +94,9 @@ def test_wavelet_features(plot=False):
     n2 = 20
     nfeatures = 3
     n = n1 + n2
-    wfs = pl.randn(n,len(swf1)) * noiselvl
+    wfs = np.random.randn(n,len(swf1)) * noiselvl
     for i in xrange(n):
-        if pl.rand() * n < n1:
+        if np.random.rand() * n < n1:
             wfs[i] += swf1
         else:
             wfs[i] += swf2
@@ -109,6 +108,7 @@ def test_wavelet_features(plot=False):
     # np.savetxt('features', features, delimiter=',', newline='],\n')
     
     if plot:
+        import pylab as pl
         from mpl_toolkits.mplot3d import Axes3D
         pl.figure()
         ax = pl.gcf().add_subplot(2, 2, 1, projection='3d')
