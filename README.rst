@@ -42,6 +42,7 @@ see requirements.txt for most up to date information
 - nose >= 0.11 (only for testing)
 
 The library version numbers may be more strict than necessary.
+
 It may be necessary to install these requirements prior to installing as I don't know if setup.py correctly installs missing requirements.
 
 Installing
@@ -55,4 +56,5 @@ python setup.py test
 or
 
 import pywaveclus.tests
+
 pywaveclus.tests.test.run()
