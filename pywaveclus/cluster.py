@@ -182,6 +182,40 @@ def spc_recluster(nspikes, cdata, tree, temp, nclusters = 5):
     
     return clusters, cdata, tree
 
+def clusters_to_indices(clusters):
+    """
+    
+    Parameters
+    ----------
+    clusters : list of 1d arrays
+        List containing indices of each cluster. Length = nclusters + 1
+        clusters[0] contains indices for unmatched spikes
+    
+    Returns
+    -------
+    indices : 1d array of ints
+        Array containing the cluster index for each spike
+    """
+    nspks = sum([len(c) for c in clusters])
+    indices = np.zeros(nspks, dtype=int) - 1
+    for i in xrange(nspks):
+        for ci in xrange(len(clusters)):
+            if i in clusters[ci]: indices[i] = ci
+        if indices[i] == -1: raise IndexError("Spike index [%i] was not found in any cluster" % i)
+    return indices
+
+def test_clusters_to_indices():
+    ids = clusters_to_indices([[1,2,3],[4,5,0,6]])
+    assert(all(ids == np.array([1, 0, 0, 0, 1, 1, 1])))
+    
+    try:
+        clusters_to_indices([[1,2,3],[4,5,6]]) # missing index 0
+        raise Exception("clusters_to_indices failed to raise IndexError on missing index")
+    except IndexError:
+        pass # this is what it's supposed to do
+    except Exception as e:
+        raise e
+
 def klustakwik(features, tmp = '/tmp'):
     """
     NotImplemented
