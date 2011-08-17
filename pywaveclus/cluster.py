@@ -103,7 +103,7 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     np.savetxt(datafile, features)
     
     # copy correct executable
-    exefile = 'bin/spc_' + get_os()
+    exefile = os.path.dirname(__file__) + '/bin/spc_' + get_os()
     shutil.copy2(exefile, tempdir)
     exefile = 'spc_' + get_os()
     
