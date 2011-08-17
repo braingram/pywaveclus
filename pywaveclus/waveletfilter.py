@@ -76,15 +76,54 @@ def waveletfilter(data, maxlevel = 6, wavelet = 'db20', mode = 'sym', minlevel =
         return fdata # Otherwise, give back the 2D array
 
 def calculate_cutoffs(samplingrate, maxlevel=None):
+    """
+    Calculate the cutoff frequences for each decomposition level
+    
+    Parameters
+    ----------
+    samplingrate : int
+        Number of data samples per second
+    maxlevel : int, optional
+        Maximum wavlet decomposition level at which to calculate the cutoffs
+            default = int(ceil(log2(samplingrate)-1))
+    
+    Returns
+    -------
+    cutoffs : 1d array
+        Cutoff frequencies for wavlet decomposition level boundries
+        len(cutoffs) = maxlevel + 1
+    
+    Notes
+    -----
+    cutoffs 0 & 1 are for level 1, 1 & 2 for level 2, etc...
+    
+    """
     if maxlevel is None:
         # sf / (2 ** (lvl+1)) = 1Hz
         # sf = 2 ** (lvl+1)
         # log2(sf) = lvl+1
         # log2(sf) - 1 = lvl
         maxlevel = int(np.ceil(np.log2(samplingrate) - 1))
-    return samplingrate / (2 ** (np.arange(maxlevel+1)))
+    return samplingrate / (2 ** (np.arange(1,maxlevel+2)))
 
 def level_to_cutoffs(samplingrate, level):
+    """
+    Calculate the cutoff frequencies for a single wavelet decomposition level
+    
+    Parameters
+    ----------
+    samplingrate : int
+        Number of data samples per second
+    level : int
+        Wavelet decomposition level at which to calculate cutoff frequencies
+    
+    Returns
+    -------
+    lowcutoff : float
+        Low frequency cutoff point
+    highcutoff : float
+        High frequency cutoff point
+    """
     return (samplingrate / 2 ** (level+1), samplingrate / 2 ** level)
 
 def test_waveletfilter():

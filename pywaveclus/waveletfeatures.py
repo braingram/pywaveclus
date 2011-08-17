@@ -9,29 +9,18 @@ import pywt
 
 def test_ks(coeffs):
     """
+    A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution to norm
+    
+    Parameters
+    ----------
+    coeffs : 1d array
+        A single wavelet coefficient measured across many spikes
+    
+    Returns
+    -------
+    d : float
+        D statistic from Kolmogorov-Smirnov test
     """
-    # kstest(coeffs,'norm')
-    # function [KSmax] = test_ks(x)
-    # % 
-    # % Calculates the CDF (expcdf)
-    # [y_expcdf,x_expcdf]=cdfcalc(x);
-    # 
-    # %
-    # % The theoretical CDF (theocdf) is assumed to be normal  
-    # % with unknown mean and sigma
-    # 
-    # zScores  =  (x_expcdf - mean(x))./std(x);
-    # theocdf  =  normcdf(zScores , 0 , 1);
-    # 
-    # %
-    # % Compute the Maximum distance: max|S(x) - theocdf(x)|.
-    # %
-    # 
-    # delta1    =  y_expcdf(1:end-1) - theocdf;   % Vertical difference at jumps approaching from the LEFT.
-    # delta2    =  y_expcdf(2:end)   - theocdf;   % Vertical difference at jumps approaching from the RIGHT.
-    # deltacdf  =  abs([delta1 ; delta2]);
-    # 
-    # KSmax =  max(deltacdf);
     d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs,ddof=1),'norm')
     return d
 
@@ -84,7 +73,7 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
         if len(culledcoeffs) > 10:
             coefffitness[i] = test_ks(culledcoeffs)
         # else 0 (see coefffitness definition)
-    print coefffitness
+    # print coefffitness
     # store the indices of the 'good' coefficients
     ind = np.argsort(coefffitness)
     goodcoeff = ind[::-1][:nfeatures]
@@ -116,6 +105,8 @@ def test_wavelet_features(plot=False):
     features = wavelet_features(wfs, nfeatures=nfeatures)
     # print n, nfeatures, features.shape
     assert(features.shape == (n,nfeatures))
+    
+    # np.savetxt('features', features, delimiter=',', newline='],\n')
     
     if plot:
         from mpl_toolkits.mplot3d import Axes3D
