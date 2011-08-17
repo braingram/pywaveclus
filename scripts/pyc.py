@@ -23,10 +23,10 @@ filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/clip.wav'
 parser = OptionParser(usage="usage: %prog [options] recording.wav [output_directory]")
 parser.add_option("-b", "--baselineTime", dest = "baselineTime",
                     help = "number of samples at beginning of recording used to calculate spike threshold",
-                    default = 441000)
+                    default = 441000, type='int')
 parser.add_option("-c", "--chunkSize", dest = "chunkSize",
                     help = "data is processed in chunks (to reduce mem usage). Number of samples to read per chunk",
-                    default = 441000)
+                    default = 441000, type='int')
 parser.add_option("-d", "--detectionDirection", dest = "detectionDirection",
                     help = "pos, neg, or both: detect spikes of a particular or both directions",
                     default = 'both')
@@ -35,22 +35,22 @@ parser.add_option("-e", "--plotext", dest = "plotext",
                     default = '.png')
 parser.add_option("-f", "--nfeatures", dest = "nfeatures",
                     help = "number of features to measure per waveform",
-                    default = 10)
+                    default = 10, type='int')
 parser.add_option("-H", "--filterMax", dest = "filterMax",
                     help = "maximum wavelet decomposition level for filtering (acts as a highpass)",
-                    default = 6)
+                    default = 6, type='int')
 parser.add_option("-l", "--lockfile", dest = "lockfile",
                     help = "use a lockfile to prevent simultaneous disc access for >1 copy of this program",
                     default = None)
 parser.add_option("-L", "--filterMin", dest = "filterMin",
                     help = "minimum wavelet decomposition level for filtering (acts as a lowpass)",
-                    default = 3)
+                    default = 3, type='int')
 parser.add_option("-m", "--mat", dest = "mat",
                     help = "save results in a mat file",
                     default = False, action = "store_true")
 parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
                     help = "number of samples to overlap chunks",
-                    default = 4410) # TODO better explanation
+                    default = 4410, type='int') # TODO better explanation
 parser.add_option("-p", "--plot", dest = "plot",
                     help = "generate lots of plots",
                     default = False, action = "store_true")
@@ -62,10 +62,10 @@ parser.add_option("-v", "--verbose", dest = "verbose",
                     default = False, action = "store_true")
 parser.add_option("-w", "--prew", dest = "prew",
                     help = "number of samples prior to threshold crossing to store for each waveform",
-                    default = 40)
+                    default = 40, type='int')
 parser.add_option("-W", "--postw", dest = "postw",
                     help = "number of samples after the threshold crossing to store for each waveform",
-                    default = 88)
+                    default = 88, type='int')
 (options, args) = parser.parse_args()
 
 def error(string, exception=Exception):
@@ -138,21 +138,26 @@ if options.chunkSize > nframes:
     logging.warning("ChunkSize [%i] was > nframes [%i]" % (options.chunkSize, nframes))
     options.chunkSize = nframes
 
-@contextmanager
-def waiting_file_lock(lock_file, delay=1):
-    while os.path.exists(lock_file):
-        logging.info("Found lock file, waiting to recheck in %d..." % delay)
-        time.sleep(delay)
-    open(lock_file, 'w').write("1")
-    try:
+if not(options.lockfile is None):
+    @contextmanager
+    def waiting_file_lock(lock_file, delay=1):
+        while os.path.exists(lock_file):
+            logging.info("Found lock file, waiting to recheck in %d..." % delay)
+            time.sleep(delay)
+        open(lock_file, 'w').write("1")
+        try:
+            yield
+        finally:
+            if os.path.exists(lock_file):
+                os.remove(lock_file)
+else:
+    @contextmanager
+    def waiting_file_lock(lock_file, delay=1):
         yield
-    finally:
-        if os.path.exists(lock_file):
-            os.remove(lock_file)
 
 # find threshold
 af.seek(frameStart)
-with waiting_file_lock('/tmp/pyc.lock', 1):
+with waiting_file_lock(options.lockfile, 1):
     threshold = detect.calculate_threshold(\
                     waveletfilter.waveletfilter(\
                         af.read_frames(options.baselineTime),\
@@ -200,18 +205,20 @@ del f, si, sw, goodspikes
 
 if spikeindices is None: # No spikes were found
     logging.warning("No spikes were found")
-    sys.exit(0)
-
-logging.debug("Found %i spikes" % len(spikeindices))
-# measure
-spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
-
-# np.savetxt('features', spikefeatures, delimiter=',', newline='],\n')
-
-# cluster
-clusters, tree, cdata = cluster.spc(spikefeatures)
-logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
-clusterindices = cluster.clusters_to_indices(clusters)
+    spikeindices = []
+    spikewaveforms = []
+    clusters = []
+    clusterindices = []
+    # sys.exit(0)
+else:
+    logging.debug("Found %i spikes" % len(spikeindices))
+    # measure
+    spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
+    
+    # cluster
+    clusters, tree, cdata = cluster.spc(spikefeatures)
+    logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
+    clusterindices = cluster.clusters_to_indices(clusters)
 
 # construct output directory
 if not os.path.exists(outdir):
@@ -237,7 +244,7 @@ else: # save as hdf5 file
     
     class description(tables.IsDescription):
         time = tables.Int32Col()
-        wave = tables.Float64Col(shape=(spikewaveforms.shape[1],))
+        wave = tables.Float64Col(shape=(options.prew + options.postw + 1,))
         clu = tables.Int8Col()
     
     hdfFile = tables.openFile(outfile,"w")
@@ -253,6 +260,10 @@ else: # save as hdf5 file
     logging.debug("closing hdf5 file")
     spiketable.flush()
     hdfFile.close()
+
+if len(spikeindices) == 0:
+    logging.warning("No spikes found, no cluster data or plots")
+    sys.exit(0)
 
 # save other stuff as txt
 np.savetxt('/'.join((outdir, 'cdata')), cdata)
