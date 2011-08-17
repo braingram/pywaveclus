@@ -226,8 +226,7 @@ def test_spc(plot=False):
     # features = realfeatures
     
     clusters, cdata, tree = spc(features)
-    print "Clusters:"
-    print [len(c) for c in clusters]
+    logging.info("Clusters: %s" % str([len(c) for c in clusters]))
     # print len(unmatched)
     
     if plot:
