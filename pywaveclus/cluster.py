@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import logging, os, shutil, subprocess, sys, tempfile
+import logging, os, shutil, stat, subprocess, sys, tempfile
 
 import numpy as np
 
@@ -114,6 +114,8 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     # run executable
     olddir = os.getcwd()
     os.chdir(tempdir)
+    # make file executable
+    os.chmod(exefile, stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     if quiet:
         with open(os.devnull, 'w') as fp:
             retcode = subprocess.call(['./spc_' + get_os(), runfilename], stdout=fp)

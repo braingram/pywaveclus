@@ -37,7 +37,7 @@ def parse_dependency_links(file_name):
 setup(
     name='pywaveclus',
     
-    packages = ['pywaveclus'],
+    packages = ['pywaveclus','pywaveclus/tests'],
     package_data={'pywaveclus': ['bin/*']},
     version='dev',
 
