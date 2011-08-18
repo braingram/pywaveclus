@@ -12,7 +12,7 @@ import pylab as pl
 import scikits.audiolab as al
 from scipy.signal import resample
 
-from pywaveclus import waveletfilter, detect, waveletfeatures, cluster
+from pywaveclus import waveletfilter, detect, waveletfeatures, cluster, template
 
 # ------------- these are just default files because I'm lazy -------------------
 filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/clip.wav'
@@ -57,6 +57,9 @@ parser.add_option("-p", "--plot", dest = "plot",
 parser.add_option("-t", "--timerange", dest = "timerange",
                     help = "time range (in samples, slice format (start:end]) over which to process the file",
                     default = ':')
+parser.add_option("-T", "--template", dest = "template",
+                    help = "perform template matching for unclustered spikes using template algorithm [none, nn, center, ml, mahal]",
+                    default = 'nn')
 parser.add_option("-v", "--verbose", dest = "verbose",
                     help = "enable verbose reporting",
                     default = False, action = "store_true")
@@ -219,6 +222,11 @@ else:
     clusters, tree, cdata = cluster.spc(spikefeatures)
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     clusterindices = cluster.clusters_to_indices(clusters)
+    
+    # template match
+    if options.template != 'none':
+        clusters = template.match(spikewaveforms, clusters, method = options.template)
+        logging.debug("Post Template Clusters: %s" % (str([len(c) for c in clusters])))
 
 # construct output directory
 if not os.path.exists(outdir):
@@ -344,7 +352,15 @@ for (color, cluster) in zip(colors,clusters):
     
     # waveforms
     pl.figure(2)
+    pl.subplot(2,len(colors),colors.index(color)+1)
     pl.plot(np.transpose(sw), c=color)
+    pl.title("N=%i" % len(sw))
+    pl.subplot(2,len(colors),colors.index(color)+1+len(colors))
+    av = np.average(sw,0)
+    sd = np.std(sw,0,ddof=1)
+    se = sd / np.sqrt(len(sw))
+    pl.fill_between(range(len(av)), av+se*1.96, av-se*1.96, color=color, alpha=0.5)
+    pl.plot(av, color=color)
     
     # features
     features = spikefeatures[cluster]
