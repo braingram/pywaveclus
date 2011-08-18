@@ -52,7 +52,12 @@ def test_match():
     clusters = match(traces, clusters, method='nn', kmin = 5)
     r = [[], np.arange(10), np.arange(10,20)]
     c = clusters
-    assert all([list(c[i]) == list(r[i]) for i in xrange(len(c))]), "%s" % str(clusters)
+    assert all([list(c[i]) == list(r[i]) for i in xrange(len(c))]), "nn:%s" % str(clusters)
+    
+    clusters = match(traces, clusters, method='center')
+    r = [[], np.arange(10), np.arange(10,20)]
+    c = clusters
+    assert all([list(c[i]) == list(r[i]) for i in xrange(len(c))]), "center:%s" % str(clusters)
 
 def nearestneighbor(x, vectors, maxdist, k = 1):
     """
@@ -168,7 +173,7 @@ def center(traces, clusters, nsd = 3):
     clusters : list of 1d array of int
         see match
     nsd : float
-        
+        Number of std-dev used to calculate max neighbor distance
     
     Returns
     -------
@@ -180,22 +185,8 @@ def center(traces, clusters, nsd = 3):
     for i in xrange(1,len(clusters)):
         ctraces = traces[clusters[i]]
         centers.append(np.mean(ctraces,0))
-        sds.append(np.sqrt(np.sum(np.var(ctraces,1))) * nsd) # should be over N not N-1
+        sds.append(np.sqrt(np.sum(np.var(ctraces,1))) * nsd) # should be over N not N-1 as per WaveClus
     centers = np.array(centers)
-    # function [templates, maxdist = build_templates(classes,features)
-    # max_class = max(classes);
-    # feature_dim = size(features,2);
-    # templates = zeros(max_class, feature_dim);
-    # maxdist   = zeros(1,max_class);
-    # for i=1:max_class,
-    #     fi = features(find(classes==i),:);
-    #     templates(i,:) = mean(fi);
-    #     maxdist(i)     = sqrt(sum(var(fi,1)));   % the 1 means that we want sum(x-m)^2/N, not N-1
-    #                                              % maxdist is the std dev of
-    #                                              % the euclidean distance from
-    #                                              % mean.
-    # 
-    # end
     matches = []
     for i in clusters[0]:
         n = nearestneighbor(traces[i], centers, sds)
@@ -204,12 +195,6 @@ def center(traces, clusters, nsd = 3):
         else:
             matches.append(n[0]+1)
     return matches
-    # [centers, sd, pd] = build_templates(class_in,f_in); % we are going to ignore pd
-    # sdnum = handles.par.template_sdnum;
-    # for i=1:nspk,
-    #     class_out(i) = nearest_neighbor(f_out(i,:),centers,sdnum*sd);        
-    # end
-    # pass
 
 def test_center():
     c1 = np.random.randn(10,3) * .1 + 1.0
