@@ -30,7 +30,7 @@ def calculate_threshold(data, n = 5):
         Wavelets and Superparamagnetic Clustering.
         Neural Comp 16:1661-1687
     """
-    assert(data.ndim == 1)
+    assert data.ndim == 1, "Calculate threshold requires a 1d array"
     return np.median(np.abs(data))/0.6745 * n
 
 def find_threshold_crossings(data, threshold, direction = 'neg'):
@@ -57,8 +57,8 @@ def find_threshold_crossings(data, threshold, direction = 'neg'):
     crossings : 1d array
         Indices in data that cross the threshold
     """
-    assert(direction in ['pos','neg','both'])
-    assert(threshold > 0)
+    assert direction in ['pos','neg','both'], "Unknown direction[%s]" % direction
+    assert threshold > 0, "Threshold[%d] must be > 0" % threshold
     
     if direction == 'pos':
         return np.where(data > threshold)[0]
@@ -101,10 +101,10 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
         Data samples around a detected peak/trough.
         Len of each array is prew + postw with peak/trough at array[prew]
     """
-    assert(prew > 0)
-    assert(postw > 0)
-    assert(type(prew) is int)
-    assert(type(postw) is int)
+    assert type(prew) is int, "prew[%s] must be an int" % str(prew)
+    assert type(postw) is int, "postw[%s] must be an int" % str(postw) 
+    assert prew > 0, "prew[%i] must be > 0" % prew
+    assert postw > 0, "postw[%i] must be > 0" % postw
     
     crossings = find_threshold_crossings(data, threshold, direction)
     
@@ -161,14 +161,17 @@ def test_find_spikes(plot=False):
     bothspikes = find_spikes(x, threshold, 'both')
     invbothspikes = find_spikes(-x, threshold, 'both')
     
-    assert(sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0)
-    assert(sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0)
+    assert sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0,\
+        "Found different # of spikes for both and both (on inverted data) detection"
+    assert sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0,\
+        "Found different # of spikes for pos and neg (on inverted data) detection"
     
     prew = 5
     postw = 5
     spiketimes, spikewaveforms = find_spikes(x, threshold, 'both', prew=5, postw=5)
     print np.array(spikewaveforms).shape
-    assert(np.array(spikewaveforms).shape == (len(sts),prew+postw))
+    assert np.array(spikewaveforms).shape == (len(sts),prew+postw), \
+        "Invalid waveform shape[%s], should be %s" % (np.array(spikewaveforms).shape, (len(sts),prew+postw))
     
     if plot:
         import pylab as pl

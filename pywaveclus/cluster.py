@@ -142,7 +142,9 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     clusters = []
     for i in xrange(nclusters):
         clusters.append(np.where(cdata[temp,2:] == i)[0])
-    unmatched = np.setdiff1d(range(len(features)), [c for cluster in clusters for c in cluster])
+    # TODO is it more efficient to do an hstack rather than a double list comprehension, for large arrays yes
+    # unmatched = np.setdiff1d(range(len(features)), [c for cluster in clusters for c in cluster])
+    unmatched = np.setdiff1d(range(len(features)), np.hstack(clusters))
     clusters = [unmatched,] + clusters
     
     return clusters, cdata, tree
@@ -177,7 +179,9 @@ def spc_recluster(nspikes, cdata, tree, temp, nclusters = 5):
     clusters = []
     for i in xrange(nclusters):
         clusters.append(np.where(cdata[temp,2:]==i)[0])
-    unmatched = np.setdiff1d(range(nspikes), [c for cluster in clusters for c in cluster])
+    # TODO is it more efficient to do an hstack rather than a double list comprehension
+    # unmatched = np.setdiff1d(range(nspikes), [c for cluster in clusters for c in cluster])
+    unmatched = np.setdiff1d(range(nspikes), np.hstack(clusters))
     clusters = [unmatched,] + clusters
     
     return clusters, cdata, tree
@@ -206,7 +210,7 @@ def clusters_to_indices(clusters):
 
 def test_clusters_to_indices():
     ids = clusters_to_indices([[1,2,3],[4,5,0,6]])
-    assert(all(ids == np.array([1, 0, 0, 0, 1, 1, 1])))
+    assert all(ids == np.array([1, 0, 0, 0, 1, 1, 1])), "clusters_to_indicies failed"
     
     try:
         clusters_to_indices([[1,2,3],[4,5,6]]) # missing index 0

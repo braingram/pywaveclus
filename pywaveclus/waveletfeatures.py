@@ -45,11 +45,11 @@ def wavelet_features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
         Resulting spike features, where features[0] are the features for the first spike.
         shape = (len(waveforms), nfeatures)
     """
-    assert(nfeatures > 0)
-    assert(levels > 0)
+    assert nfeatures > 0, "nfeatures[%i] must be > 0" % nfeatures
+    assert levels > 0, "levels[%i] must be > 0" % levels
     if type(waveforms) != np.ndarray:
         waveforms = np.array(waveforms)
-    assert(waveforms.ndim == 2)
+    assert waveforms.ndim == 2, "waveforms.ndim[%i] must be == 2" % waveforms.ndim
     nwaveforms = len(waveforms)
     
     # test for size of coefficient vector
@@ -88,7 +88,7 @@ def test_wavelet_features(plot=False):
     swf1 = [0., 0.2, 0.4, 0.8, 1.6, 1.4, 0.8, 0.3, -0.6, -0.8, -0.5, -0.3, 0.]
     # swf2 = [0., 0.1, 0.5, 0.9, 1.6, 1.4, 0.4, 0.1, -0.3, -0.2, -0.1,   0., 0.]
     swf2 = [0., 0., 0.1, 0.3, 1.8, 2.1, 0.4, 0.1, -0.3, -0.2, -0.1,   0., 0.]
-    assert(len(swf1) == len(swf2))
+    assert len(swf1) == len(swf2)
     noiselvl = 1./10.
     n1 = 10
     n2 = 20
@@ -103,7 +103,8 @@ def test_wavelet_features(plot=False):
     
     features = wavelet_features(wfs, nfeatures=nfeatures)
     # print n, nfeatures, features.shape
-    assert(features.shape == (n,nfeatures))
+    assert features.shape == (n,nfeatures),\
+        "features.shape[%s] should == %s" % (str(features.shape), str((n,nfeatures)))
     
     # np.savetxt('features', features, delimiter=',', newline='],\n')
     

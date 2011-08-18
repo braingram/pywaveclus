@@ -108,6 +108,12 @@ def calculate_cutoffs(samplingrate, maxlevel=None):
         maxlevel = int(np.ceil(np.log2(samplingrate) - 1))
     return samplingrate / (2 ** (np.arange(1,maxlevel+2)))
 
+def test_calculate_cutoffs():
+    sf = 44100
+    coffs = calculate_cutoffs(sf)
+    r = np.array([22050, 11025, 5512, 2756, 1378, 689, 344, 172, 86, 43, 21, 10, 5, 2, 1, 0])
+    assert all(coffs == r), "%s != %s" % (str(coffs), str(r))
+
 def level_to_cutoffs(samplingrate, level):
     """
     Calculate the cutoff frequencies for a single wavelet decomposition level
@@ -128,12 +134,18 @@ def level_to_cutoffs(samplingrate, level):
     """
     return (samplingrate / 2 ** (level+1), samplingrate / 2 ** level)
 
+def test_level_to_cutoffs():
+    sf = 44100
+    assert level_to_cutoffs(sf,1) == (11025, 22050), \
+        "level_to_cutoffs(%i,1) != (11025, 22050)" % \
+        (sf, str(level_to_cutoffs(sf,1)))
+
 def test_waveletfilter(plot=False):
     logging.basicConfig(level=logging.DEBUG)
     
     # make test signal
     Fs = 44100
-    freqs = [100,1000,2000,4000,5000,6000,7000,8000,9000,10000]
+    freqs = [100,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000]
     t = np.arange(Fs,dtype=np.float64) / float(Fs) # 1 second
     x = np.zeros(len(t))
     for f in freqs:
@@ -142,6 +154,10 @@ def test_waveletfilter(plot=False):
     # print t,x
     
     filtered = waveletfilter(x, minlevel=3, maxlevel=6)
+    assert len(filtered) == len(x),\
+        "len(filtered)[%i] != len(x)[%i]" % (len(filtered), len(x))
+    
+    # TODO: test effectiveness of cutoffs
     
     if plot:
         import pylab as pl
@@ -157,4 +173,6 @@ def test_waveletfilter(plot=False):
         pl.show()
 
 if __name__ == '__main__':
+    test_calculate_cutoffs()
+    test_level_to_cutoffs()
     test_waveletfilter(True)
