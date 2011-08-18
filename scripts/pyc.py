@@ -219,7 +219,7 @@ else:
     spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
     
     # cluster
-    clusters, tree, cdata = cluster.spc(spikefeatures)
+    clusters, tree, cdata = cluster.spc(spikefeatures, quiet = (not options.verbose))
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     clusterindices = cluster.clusters_to_indices(clusters)
     
@@ -326,7 +326,7 @@ pl.suptitle("Spike Times")
 pl.xlabel("Time(samples)")
 pl.ylabel("Amplitude")
 
-pl.figure(2)
+pl.figure(2, figsize=(len(clusters)*3,6))
 pl.suptitle("Spike Waveforms")
 pl.xlabel("Time(samples)")
 pl.ylabel("Amplitude")
