@@ -180,7 +180,7 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     f = waveletfilter.waveletfilter(d, minlevel = options.filterMin, maxlevel = options.filterMax)
     
     # detect
-    si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew)
+    si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
     si = np.array(si)
     sw = np.array(sw)
     
