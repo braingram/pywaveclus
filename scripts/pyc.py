@@ -244,7 +244,7 @@ else: # save as hdf5 file
     
     class description(tables.IsDescription):
         time = tables.Int32Col()
-        wave = tables.Float64Col(shape=(options.prew + options.postw + 1,))
+        wave = tables.Float64Col(shape=(options.prew + options.postw,))
         clu = tables.Int8Col()
     
     hdfFile = tables.openFile(outfile,"w")
@@ -324,8 +324,12 @@ pl.xlabel("Time(samples)")
 pl.ylabel("Amplitude")
 
 pl.figure(3)
-ax = pl.gcf().add_subplot(2, 2, 3, projection='3d')
-ax.set_title("Clusters: %s" % str([len(c) for c in clusters]))
+try:
+    ax = pl.gcf().add_subplot(2, 2, 3, projection='3d')
+    ax.set_title("Clusters: %s" % str([len(c) for c in clusters]))
+    use3d = True
+except:
+    use3d = False
 
 nf = options.nfeatures
 
@@ -344,7 +348,8 @@ for (color, cluster) in zip(colors,clusters):
     
     # features
     features = spikefeatures[cluster]
-    ax.scatter(features[:,0],features[:,1],features[:,2],c=color) # on figure 3
+    if use3d:
+        ax.scatter(features[:,0],features[:,1],features[:,2],c=color) # on figure 3
     
     pl.figure(3)
     for x in xrange(nf):

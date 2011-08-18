@@ -99,7 +99,7 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
     
     spikewaveforms: list of 1d arrays
         Data samples around a detected peak/trough.
-        Len of each array is prew + postw + 1 with peak/trough at array[prew]
+        Len of each array is prew + postw with peak/trough at array[prew]
     """
     assert(prew > 0)
     assert(postw > 0)
@@ -163,6 +163,12 @@ def test_find_spikes(plot=False):
     
     assert(sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0)
     assert(sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0)
+    
+    prew = 5
+    postw = 5
+    spiketimes, spikewaveforms = find_spikes(x, threshold, 'both', prew=5, postw=5)
+    print np.array(spikewaveforms).shape
+    assert(np.array(spikewaveforms).shape == (len(sts),prew+postw))
     
     if plot:
         import pylab as pl
