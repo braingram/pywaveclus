@@ -48,6 +48,9 @@ parser.add_option("-L", "--filterMin", dest = "filterMin",
 parser.add_option("-m", "--mat", dest = "mat",
                     help = "save results in a mat file",
                     default = False, action = "store_true")
+parser.add_option("-n", "--nthresh", type='float',
+                    help = "n standard units used in threshold calculation",
+                    default = 5)
 parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
                     help = "number of samples to overlap chunks",
                     default = 4410, type='int') # TODO better explanation
@@ -164,8 +167,8 @@ with waiting_file_lock(options.lockfile, 1):
     threshold = detect.calculate_threshold(\
                     waveletfilter.waveletfilter(\
                         af.read_frames(options.baselineTime),\
-                    minlevel = options.filterMin, maxlevel = options.filterMax)\
-                )
+                    minlevel = options.filterMin, maxlevel = options.filterMax),\
+                n = options.nthresh)
 logging.debug("Found threshold: %f" % threshold)
 
 spikeindices = None
