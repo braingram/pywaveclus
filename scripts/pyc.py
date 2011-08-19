@@ -226,7 +226,7 @@ else:
     spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
     
     # cluster
-    clusters, tree, cdata = cluster.spc(spikefeatures, quiet = (not options.verbose), nclusters = options.nclusters)
+    clusters, cdata, tree = cluster.spc(spikefeatures, quiet = (not options.verbose), nclusters = options.nclusters)
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     clusterindices = cluster.clusters_to_indices(clusters)
     
