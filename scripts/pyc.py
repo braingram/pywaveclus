@@ -150,12 +150,14 @@ if not(options.lockfile is None):
         while os.path.exists(lock_file):
             logging.info("Found lock file, waiting to recheck in %d..." % delay)
             time.sleep(delay)
-        open(lock_file, 'w').write("1")
+        f = open(lock_file, 'w')
+        f.write("1")
+        f.close()
         try:
             yield
         finally:
-            if os.path.exists(lock_file):
-                os.remove(lock_file)
+            # if os.path.exists(lock_file):
+            os.remove(lock_file) # TODO: why does this sometimes not exist? is it a matter of 'flushing' writes?
 else:
     @contextmanager
     def waiting_file_lock(lock_file, delay=1):
