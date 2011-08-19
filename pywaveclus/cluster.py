@@ -24,7 +24,7 @@ def get_os():
         raise ValueError("Unknown operating system: %s" % sys.platform)
 
 def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
-        swcycles = 100, knn = 11, minclus = None, minperc = 0.25, nclusters = 5,
+        swcycles = 100, knn = 11, minclus = None, minperc = 0.5, nclusters = 5,
         quiet = True):
     """
     Super-paramagnetic clustering
@@ -47,6 +47,7 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
         Number of nearest neighbors to use in spc
     minclus : int
         Minimum cluster size, for determining optimal temperature
+        Should be ~session length in seconds
     minperc : float
         Percentage of total spikes used to determine minimum cluster size.
         Only used when minclus is None
@@ -132,17 +133,18 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     shutil.rmtree(tempdir)
     
     # find good 'temperature' for clustering
-    dt = np.diff(tree,axis=0)[:,4:4+nclusters] # only consider n clusters, this is based on WaveClus
+    # dt = np.diff(tree,axis=0)[:,4:4+nclusters] # only consider n clusters, this is based on WaveClus
     logging.debug("Cluster temperature threshold: %i" % minclus)
-    temp = len(np.where(np.max(dt,1) > minclus)[0])
-    if temp == 0 and tree[0,nclusters+1] < minclus:
-        temp += 1 # based on WaveClus... all seems arbitrary :-/
+    # temp1 = np.where(np.any(ct1[:,4:4+nclusters+1] > thresh,1))[0][-1] # find max temp with 1 clus > thresh
+    temp = np.where(np.any(tree[:,4:4+nclusters] > minclus,1))[0][-1]
+    # temp = len(np.where(np.max(dt,1) > minclus)[0])
+    # if temp == 0 and tree[0,nclusters+1] < minclus:
+        # temp += 1 # based on WaveClus... all seems arbitrary :-/
     logging.debug("Cluster temperature: %i" % temp)
     
     clusters = []
     for i in xrange(nclusters):
         clusters.append(np.where(cdata[temp,2:] == i)[0])
-    # TODO is it more efficient to do an hstack rather than a double list comprehension, for large arrays yes
     # unmatched = np.setdiff1d(range(len(features)), [c for cluster in clusters for c in cluster])
     unmatched = np.setdiff1d(range(len(features)), np.hstack(clusters))
     clusters = [unmatched,] + clusters
@@ -176,6 +178,7 @@ def spc_recluster(nspikes, cdata, tree, temp, nclusters = 5):
     tree : 2d array
         see parameters
     """
+    # TODO: can I just use cdata.shape to get the number of spikes?
     clusters = []
     for i in xrange(nclusters):
         clusters.append(np.where(cdata[temp,2:]==i)[0])
@@ -265,7 +268,7 @@ def test_spc(plot=False):
     features = fakefeatures
     # features = realfeatures
     
-    clusters, cdata, tree = spc(features)
+    clusters, cdata, tree = spc(features)#, minclus = 15)
     logging.info("Clusters: %s" % str([len(c) for c in clusters]))
     # print len(unmatched)
     
