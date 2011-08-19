@@ -51,6 +51,8 @@ parser.add_option("-m", "--mat", dest = "mat",
 parser.add_option("-n", "--nthresh", type='float',
                     help = "n standard units used in threshold calculation",
                     default = 5)
+parser.add_option("-N", "--nclusters", type='int',
+                    help = "number of clusters to use")
 parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
                     help = "number of samples to overlap chunks",
                     default = 4410, type='int') # TODO better explanation
@@ -62,7 +64,7 @@ parser.add_option("-t", "--timerange", dest = "timerange",
                     default = ':')
 parser.add_option("-T", "--template", dest = "template",
                     help = "perform template matching for unclustered spikes using template algorithm [none, nn, center, ml, mahal]",
-                    default = 'nn')
+                    default = 'center')
 parser.add_option("-v", "--verbose", dest = "verbose",
                     help = "enable verbose reporting",
                     default = False, action = "store_true")
@@ -224,7 +226,7 @@ else:
     spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
     
     # cluster
-    clusters, tree, cdata = cluster.spc(spikefeatures, quiet = (not options.verbose))
+    clusters, tree, cdata = cluster.spc(spikefeatures, quiet = (not options.verbose), nclusters = options.nclusters)
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     clusterindices = cluster.clusters_to_indices(clusters)
     
