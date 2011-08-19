@@ -52,7 +52,8 @@ parser.add_option("-n", "--nthresh", type='float',
                     help = "n standard units used in threshold calculation",
                     default = 5)
 parser.add_option("-N", "--nclusters", type='int',
-                    help = "number of clusters to use")
+                    help = "number of clusters to use",
+                    default = 5)
 parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
                     help = "number of samples to overlap chunks",
                     default = 4410, type='int') # TODO better explanation
@@ -226,7 +227,8 @@ else:
     spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
     
     # cluster
-    clusters, cdata, tree = cluster.spc(spikefeatures, quiet = (not options.verbose), nclusters = options.nclusters)
+    clusters, cdata, tree = cluster.spc(spikefeatures, quiet = (not options.verbose),\
+                                        nclusters = options.nclusters, minclus = nframes / float(samplerate))
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     clusterindices = cluster.clusters_to_indices(clusters)
     

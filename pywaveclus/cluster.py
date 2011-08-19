@@ -136,7 +136,11 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     # dt = np.diff(tree,axis=0)[:,4:4+nclusters] # only consider n clusters, this is based on WaveClus
     logging.debug("Cluster temperature threshold: %i" % minclus)
     # temp1 = np.where(np.any(ct1[:,4:4+nclusters+1] > thresh,1))[0][-1] # find max temp with 1 clus > thresh
-    temp = np.where(np.any(tree[:,4:4+nclusters] > minclus,1))[0][-1]
+    goodtemps = np.where(np.any(tree[:,4:4+nclusters] > minclus,1))[0]
+    if len(goodtemps) == 0:
+        temp = 1
+    else:
+        temp = goodtemps[-1]
     # temp = len(np.where(np.max(dt,1) > minclus)[0])
     # if temp == 0 and tree[0,nclusters+1] < minclus:
         # temp += 1 # based on WaveClus... all seems arbitrary :-/
