@@ -230,12 +230,13 @@ else:
     clusters, cdata, tree = cluster.spc(spikefeatures, quiet = (not options.verbose),\
                                         nclusters = options.nclusters, minclus = nframes / float(samplerate))
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
-    clusterindices = cluster.clusters_to_indices(clusters)
     
     # template match
     if options.template != 'none':
         clusters = template.match(spikewaveforms, clusters, method = options.template)
         logging.debug("Post Template Clusters: %s" % (str([len(c) for c in clusters])))
+    
+    clusterindices = cluster.clusters_to_indices(clusters)
 
 # construct output directory
 if not os.path.exists(outdir):
