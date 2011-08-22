@@ -227,7 +227,7 @@ else:
     spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
     
     # cluster
-    clusters, cdata, tree = cluster.spc(spikefeatures, quiet = (not options.verbose),\
+    clusters, cdata, ctree = cluster.spc(spikefeatures, quiet = (not options.verbose),\
                                         nclusters = options.nclusters, minclus = nframes / float(samplerate))
     logging.debug("Found Clusters: %s" % (str([len(c) for c in clusters])))
     
@@ -251,7 +251,9 @@ if options.mat:
     import scipy.io
     scipy.io.savemat(outfile, {'times': spikeindices,
                                 'waves': spikewaveforms,
-                                'clus': clusterindices})
+                                'clus': clusterindices,
+                                'cdata': cdata,
+                                'ctree': ctree})
 else: # save as hdf5 file
     import tables
     outfile += '.h5'
@@ -275,6 +277,10 @@ else: # save as hdf5 file
         spiketable.row['clu'] = clusterindices[i]
         spiketable.row.append()
     
+    spcgroup = hdfFile.createGroup('/', 'SPC', 'SPC results')
+    hdfFile.createArray(spcgroup,'cdata',cdata)
+    hdfFile.createArray(spcgroup,'ctree',ctree)
+    
     logging.debug("closing hdf5 file")
     spiketable.flush()
     hdfFile.close()
@@ -283,9 +289,9 @@ if len(spikeindices) == 0:
     logging.warning("No spikes found, no cluster data or plots")
     sys.exit(0)
 
-# save other stuff as txt
-np.savetxt('/'.join((outdir, 'cdata')), cdata)
-np.savetxt('/'.join((outdir, 'ctree')), tree)
+# # save other stuff as txt
+# np.savetxt('/'.join((outdir, 'cdata')), cdata)
+# np.savetxt('/'.join((outdir, 'ctree')), ctree)
 
 
 
@@ -400,7 +406,7 @@ for x in xrange(nf):
             pl.ylim(spikefeatures[:,y].min()-yr*b, spikefeatures[:,y].max()+yr*b)
 
 # pl.figure(4)
-# pl.imshow(tree, interpolation='nearest')
+# pl.imshow(ctree, interpolation='nearest')
 # pl.suptitle("Clustering Tree")
 # pl.xlabel("Clusters")
 # pl.ylabel("Time")
