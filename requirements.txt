@@ -2,5 +2,5 @@ nose>=0.11
 numpy>=1.5.1
 scipy>=0.8.0
 scikits.audiolab>=0.11.0
-tables>=2.2.1
+tables>=2.1.2
 pywavelets>=0.2.0
