@@ -141,6 +141,7 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
         temp = 1
     else:
         temp = goodtemps[-1]
+    if temp == 0: temp = 1 # based on WaveClus, to overcome first temperature being all 1 spin
     # temp = len(np.where(np.max(dt,1) > minclus)[0])
     # if temp == 0 and tree[0,nclusters+1] < minclus:
         # temp += 1 # based on WaveClus... all seems arbitrary :-/

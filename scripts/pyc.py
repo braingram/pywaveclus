@@ -26,7 +26,7 @@ parser.add_option("-b", "--baselineTime", dest = "baselineTime",
                     default = 441000, type='int')
 parser.add_option("-c", "--chunkSize", dest = "chunkSize",
                     help = "data is processed in chunks (to reduce mem usage). Number of samples to read per chunk",
-                    default = 441000, type='int')
+                    default = 4410000, type='int')
 parser.add_option("-d", "--detectionDirection", dest = "detectionDirection",
                     help = "pos, neg, or both: detect spikes of a particular or both directions",
                     default = 'both')
@@ -38,7 +38,7 @@ parser.add_option("-f", "--nfeatures", dest = "nfeatures",
                     default = 10, type='int')
 parser.add_option("-H", "--filterMax", dest = "filterMax",
                     help = "maximum wavelet decomposition level for filtering (acts as a highpass)",
-                    default = 6, type='int')
+                    default = 7, type='int')
 parser.add_option("-l", "--lockfile", dest = "lockfile",
                     help = "use a lockfile to prevent simultaneous disc access for >1 copy of this program",
                     default = None)
