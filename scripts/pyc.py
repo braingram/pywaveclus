@@ -134,7 +134,10 @@ if e.strip() == '':
     frameEnd = af.nframes
 else:
     frameEnd = int(tps[1])
-if frameEnd > af.nframes: error("Invalid timerange: end [%i] > nframes [%i]" % (frameEnd, af.nframes), ValueError)
+if frameEnd > af.nframes:
+    logging.warning("End of timerange[%i] was > audio nframes[%i], truncating timerange" % (frameEnd, af.nframes))
+    frameEnd = af.nframes
+    #error("Invalid timerange: end [%i] > nframes [%i]" % (frameEnd, af.nframes), ValueError)
 if frameEnd < frameStart: error("Invalid timerange: end [%i] < start [%i]" % (frameEnd, frameStart), ValueError)
 nframes = frameEnd - frameStart
 logging.debug("Time Range: %i - %i = %i" % (frameStart, frameEnd, nframes))

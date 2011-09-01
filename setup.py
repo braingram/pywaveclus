@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" distribute- and pip-enabled setup.py for pythor3 """
+""" distribute- and pip-enabled setup.py for pywaveclus """
 
 from distribute_setup import use_setuptools
 use_setuptools()
@@ -33,6 +33,9 @@ def parse_dependency_links(file_name):
 
     return dependency_links
 
+def get_version():
+    import pywaveclus
+    return pywaveclus.__version__
 
 setup(
     name='pywaveclus',
@@ -40,7 +43,7 @@ setup(
     packages = ['pywaveclus','pywaveclus/tests'],
     package_data={'pywaveclus': ['bin/*']},
     scripts=['scripts/pyc.py'],
-    version='dev',
+    version=get_version(),
 
     include_package_data=True,
 
