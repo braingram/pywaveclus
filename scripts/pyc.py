@@ -231,7 +231,19 @@ if spikeindices is None: # No spikes were found
     spikewaveforms = []
     clusters = []
     clusterindices = []
+    cdata = []
+    ctree = []
     # sys.exit(0)
+elif len(spikeindices) < options.nclusters: # not enough spikes to cluster, put them all in cluster 0
+    nspikes = len(spikeindices)
+    clusters = [range(nspikes),]
+    for i in range(options.nclusters): clusters.append([])
+    print clusters
+    clusterindices = cluster.clusters_to_indices(clusters)
+    cdata = []
+    ctree = []
+    
+    spikefeatures = waveletfeatures.wavelet_features(spikewaveforms, nfeatures = options.nfeatures)
 else:
     logging.debug("Found %i spikes" % len(spikeindices))
     # measure
