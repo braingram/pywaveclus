@@ -376,10 +376,10 @@ except:
 
 nf = options.nfeatures
 
-for (color, cluster) in zip(colors,clusters):
-    if len(cluster) == 0: continue
-    sw = spikewaveforms[cluster]
-    si = spikeindices[cluster]
+for (color, cl) in zip(colors,clusters):
+    if len(cl) == 0: continue
+    sw = spikewaveforms[cl]
+    si = spikeindices[cl]
     # plot times
     pl.figure(1)
     se = sw[:,options.prew]
@@ -398,7 +398,7 @@ for (color, cluster) in zip(colors,clusters):
     pl.plot(av, color=color)
     
     # features
-    features = spikefeatures[cluster]
+    features = spikefeatures[cl]
     if use3d:
         ax.scatter(features[:,0],features[:,1],features[:,2],c=color) # on figure 3
     
@@ -424,6 +424,16 @@ for x in xrange(nf):
             yr = spikefeatures[:,y].max() - spikefeatures[:,y].min()
             pl.ylim(spikefeatures[:,y].min()-yr*b, spikefeatures[:,y].max()+yr*b)
 
+if ctree != []:
+    pl.figure(4)
+    pl.suptitle("SPC Temperatures")
+    pl.plot(ctree[:,4:])
+    pl.legend(range(ctree[:,4:].shape[1]))
+    pl.ylabel('Cluster Population')
+    pl.xlabel('Temperature Step')
+    temp = cluster.spc_find_temperature(ctree, options.nclusters, nframes / float(samplerate))
+    pl.axvline(temp, color = 'k')
+
 # pl.figure(4)
 # pl.imshow(ctree, interpolation='nearest')
 # pl.suptitle("Clustering Tree")
@@ -434,7 +444,7 @@ for x in xrange(nf):
 # isi = np.diff(spikeindices) / samplerate
 # pl.hist(isi)
 
-for (i, n) in enumerate(['times', 'waves', 'features']):
+for (i, n) in enumerate(['times', 'waves', 'features', 'spc_temp']):
     pl.figure(i+1)
     pl.savefig('/'.join((outdir, n + options.plotext)))
 
