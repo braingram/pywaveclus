@@ -38,13 +38,13 @@ parser.add_option("-f", "--nfeatures", dest = "nfeatures",
                     default = 10, type='int')
 parser.add_option("-H", "--filterMax", dest = "filterMax",
                     help = "maximum wavelet decomposition level for filtering (acts as a highpass)",
-                    default = 7, type='int')
+                    default = 6, type='int')
 parser.add_option("-l", "--lockfile", dest = "lockfile",
                     help = "use a lockfile to prevent simultaneous disc access for >1 copy of this program",
                     default = None)
 parser.add_option("-L", "--filterMin", dest = "filterMin",
                     help = "minimum wavelet decomposition level for filtering (acts as a lowpass)",
-                    default = 3, type='int')
+                    default = 4, type='int')
 parser.add_option("-m", "--mat", dest = "mat",
                     help = "save results in a mat file",
                     default = False, action = "store_true")
@@ -99,6 +99,13 @@ if len(args) == 2:
 else:
     outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
 
+# construct output directory
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
+
+# start logging
+logging.root.addHandler(logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
+
 def chunk(n, chunksize, overlap=0):
     """
     Chunk generator
@@ -148,6 +155,7 @@ if options.chunkSize > nframes:
     options.chunkSize = nframes
 
 if not(options.lockfile is None):
+    # TODO have this make a directory not a file, since on UNIX directories are atomic
     @contextmanager
     def waiting_file_lock(lock_file, delay=1):
         while os.path.exists(lock_file):
@@ -165,6 +173,9 @@ else:
     @contextmanager
     def waiting_file_lock(lock_file, delay=1):
         yield
+
+logging.debug("Filter low-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMax)[0])
+logging.debug("Filter high-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMin)[1])
 
 # find threshold
 af.seek(frameStart)
@@ -237,10 +248,6 @@ else:
         logging.debug("Post Template Clusters: %s" % (str([len(c) for c in clusters])))
     
     clusterindices = cluster.clusters_to_indices(clusters)
-
-# construct output directory
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
 
 # save results in output directory
 outfile = '/'.join((outdir, os.path.splitext(os.path.basename(filename))[0]))
