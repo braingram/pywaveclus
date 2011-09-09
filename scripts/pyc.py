@@ -33,6 +33,9 @@ parser.add_option("-d", "--detectionDirection", dest = "detectionDirection",
 parser.add_option("-e", "--plotext", dest = "plotext",
                     help = "plot file extension",
                     default = '.png')
+parser.add_option("-E", "--neo", dest = "neo",
+                    help = "use non-linear energy operator for detection",
+                    default = False, action = "store_true")
 parser.add_option("-f", "--nfeatures", dest = "nfeatures",
                     help = "number of features to measure per waveform",
                     default = 10, type='int')
@@ -183,11 +186,18 @@ logging.debug("Filter high-cutoff: %.3f" % waveletfilter.level_to_cutoffs(sample
 # find threshold
 af.seek(frameStart)
 with waiting_file_lock(options.lockfile, 1):
-    threshold = detect.calculate_threshold(\
-                    waveletfilter.waveletfilter(\
-                        af.read_frames(options.baselineTime),\
-                    minlevel = options.filterMin, maxlevel = options.filterMax),\
-                n = options.nthresh)
+    if options.neo:
+        threshold = detect.neo_calculate_threshold(\
+                        waveletfilter.waveletfilter(\
+                            af.read_frames(options.baselineTime),\
+                        minlevel = options.filterMin, maxlevel = options.filterMax),\
+                    n = options.nthresh)
+    else:
+        threshold = detect.calculate_threshold(\
+                        waveletfilter.waveletfilter(\
+                            af.read_frames(options.baselineTime),\
+                        minlevel = options.filterMin, maxlevel = options.filterMax),\
+                    n = options.nthresh)
 logging.debug("Found threshold: %f" % threshold)
 
 spikeindices = None
@@ -205,7 +215,10 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     f = waveletfilter.waveletfilter(d, minlevel = options.filterMin, maxlevel = options.filterMax)
     
     # detect
-    si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
+    if options.neo:
+        si, sw = detect.neo_find_spikes(f, threshold, prew = options.prew, postw = options.postw)
+    else:
+        si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
     si = np.array(si)
     sw = np.array(sw)
     
@@ -434,7 +447,8 @@ if ctree != []:
     pl.legend(range(ctree[:,4:].shape[1]))
     pl.ylabel('Cluster Population')
     pl.xlabel('Temperature Step')
-    temp = cluster.spc_find_temperature(ctree, options.nclusters, nframes / float(samplerate))
+    # temp = cluster.spc_find_temperature(ctree, options.nclusters, nframes / float(samplerate))
+    temp = cluster.spc_find_temperature_2(ctree, options.nclusters)
     pl.axvline(temp, color = 'k')
 
 # pl.figure(4)

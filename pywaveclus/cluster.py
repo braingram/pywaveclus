@@ -40,6 +40,26 @@ def spc_find_temperature(tree, nclusters, minclus):
     logging.debug("Cluster temperature: %i" % temp)
     return temp
 
+def spc_find_temperature_2(tree, nclusters):
+    """
+    Find temperature without using a minimum cluster size
+    """
+    ctree = tree[:,4:4+nclusters] # tree of [:,nclusters]
+    dtree = np.diff(ctree, axis = 0)
+    votingtemps = dtree[:,1:].argmax(0)
+    votes = np.sum(dtree[votingtemps,1:] > 0, 1) #TODO maybe >=?
+    temp = votingtemps[votes.argmax()] + 1
+    logging.debug("Cluster temperature: %i" % temp)
+    return temp
+    
+    goodtemps = np.where(dtree[:,1:] > ctree[0,0] * 0.1)[0] # the % here is dependent on the SNR of the signal
+    if len(goodtemps) == 0:
+        temp = 1
+    else:
+        temp = goodtemps.max() + 1
+    logging.debug("Cluster temperature: %i" % temp)
+    return temp
+
 def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
         swcycles = 100, knn = 11, minclus = None, minperc = 0.5, nclusters = 5,
         quiet = True):
@@ -150,7 +170,8 @@ def spc(features, tmp = '/tmp', mintemp = 0, maxtemp = 0.201, tempstep = 0.01,
     shutil.rmtree(tempdir)
     
     # find good 'temperature' for clustering
-    temp = spc_find_temperature(tree, nclusters, minclus)
+    # temp = spc_find_temperature(tree, nclusters, minclus)
+    temp = spc_find_temperature_2(tree, nclusters)
     # # find good 'temperature' for clustering
     # # dt = np.diff(tree,axis=0)[:,4:4+nclusters] # only consider n clusters, this is based on WaveClus
     # logging.debug("Cluster temperature threshold: %i" % minclus)
