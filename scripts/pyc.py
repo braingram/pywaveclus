@@ -63,6 +63,9 @@ parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
 parser.add_option("-p", "--plot", dest = "plot",
                     help = "generate lots of plots",
                     default = False, action = "store_true")
+parser.add_option("-s", "--slide", dest = "slide",
+                    help = "use a sliding threshold (recalculated for each chunk)",
+                    default = False, action = "store_true")
 parser.add_option("-t", "--timerange", dest = "timerange",
                     help = "time range (in samples, slice format (start:end]) over which to process the file",
                     default = ':')
@@ -183,25 +186,31 @@ else:
 logging.debug("Filter low-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMax)[0])
 logging.debug("Filter high-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMin)[1])
 
-# find threshold
-af.seek(frameStart)
-with waiting_file_lock(options.lockfile, 1):
-    if options.neo:
-        threshold = detect.neo_calculate_threshold(\
-                        waveletfilter.waveletfilter(\
-                            af.read_frames(options.baselineTime),\
-                        minlevel = options.filterMin, maxlevel = options.filterMax),\
-                    n = options.nthresh)
-    else:
-        threshold = detect.calculate_threshold(\
-                        waveletfilter.waveletfilter(\
-                            af.read_frames(options.baselineTime),\
-                        minlevel = options.filterMin, maxlevel = options.filterMax),\
-                    n = options.nthresh)
-logging.debug("Found threshold: %f" % threshold)
+if options.slide:
+    logging.debug("Using sliding threshold")
+    threshold = 0.
+else:
+    # find threshold
+    af.seek(frameStart)
+    with waiting_file_lock(options.lockfile, 1):
+        if options.neo:
+            threshold = detect.neo_calculate_threshold(\
+                            waveletfilter.waveletfilter(\
+                                af.read_frames(options.baselineTime),\
+                            minlevel = options.filterMin, maxlevel = options.filterMax),\
+                        n = options.nthresh)
+        else:
+            threshold = detect.calculate_threshold(\
+                            waveletfilter.waveletfilter(\
+                                af.read_frames(options.baselineTime),\
+                            minlevel = options.filterMin, maxlevel = options.filterMax),\
+                        n = options.nthresh)
+    logging.debug("Found threshold: %f" % threshold)
 
 spikeindices = None
 spikewaveforms = None
+
+# thresholds = []
 
 for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     af.seek(s+frameStart)
@@ -214,11 +223,22 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     # filter
     f = waveletfilter.waveletfilter(d, minlevel = options.filterMin, maxlevel = options.filterMax)
     
+    
     # detect
     if options.neo:
+        # check threshold
+        currentThreshold = detect.neo_calculate_threshold(f, n = options.nthresh)
+        if abs(currentThreshold - threshold) > threshold*.5: logging.warning("Threshold dramatically changed: %f to %f" % (threshold, currentThreshold))
+        if options.slide: threshold = currentThreshold
         si, sw = detect.neo_find_spikes(f, threshold, prew = options.prew, postw = options.postw)
     else:
+        currentThreshold = detect.calculate_threshold(f, n = options.nthresh)
+        if abs(currentThreshold - threshold) > threshold*.5: logging.warning("Threshold dramatically changed: %f to %f" % (threshold, currentThreshold))
+        if options.slide: threshold = currentThreshold
         si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
+    
+    # thresholds.append((currentThreshold, s))
+    
     si = np.array(si)
     sw = np.array(sw)
     
@@ -241,6 +261,8 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
 af.close()
 del f, si, sw, goodspikes
 
+# np.savetxt('thresholds',np.array(thresholds))
+
 if spikeindices is None: # No spikes were found
     logging.warning("No spikes were found")
     spikeindices = []
@@ -250,7 +272,7 @@ if spikeindices is None: # No spikes were found
     cdata = []
     ctree = []
     # sys.exit(0)
-elif len(spikeindices) < options.nclusters: # not enough spikes to cluster, put them all in cluster 0
+elif len(spikeindices) < options.nfeatures: # not enough spikes to cluster, put them all in cluster 0
     nspikes = len(spikeindices)
     clusters = [range(nspikes),]
     for i in range(options.nclusters): clusters.append([])
