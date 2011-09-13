@@ -57,7 +57,7 @@ def calculate_threshold(data, n = 5):
         Neural Comp 16:1661-1687
     """
     assert data.ndim == 1, "Calculate threshold requires a 1d array"
-    return np.median(np.abs(data))/0.6745 * n
+    return n * np.median(np.abs(data)) / 0.6745
 
 def find_threshold_crossings(data, threshold, direction = 'neg'):
     """
