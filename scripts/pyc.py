@@ -205,7 +205,7 @@ else:
             threshold = detect.neo_calculate_threshold(f, n = options.nthresh)
         else:
             threshold = detect.calculate_threshold(f, n = options.nthresh)
-        np.savetxt('pyc.dat', f)
+        # np.savetxt('pyc.dat', f)
     logging.debug("Found threshold: %f" % threshold)
 
 spikeindices = None
