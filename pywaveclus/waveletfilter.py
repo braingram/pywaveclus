@@ -10,6 +10,12 @@ import logging
 import numpy as np
 import pywt
 
+import scipy.signal
+
+def butterfilter(data, flow = 300, fhigh = 3000, sr = 44100., order = 3):
+    b, a = scipy.signal.butter(order, ((flow/(sr/2.)), (fhigh/(sr/2.))), 'pass')
+    return scipy.signal.filtfilt(b, a, data)
+
 def waveletfilter(data, maxlevel = 6, wavelet = 'db20', mode = 'sym', minlevel = 1):
     """
     Filter a multi-channel signal using wavelet filtering.

@@ -24,6 +24,9 @@ parser = OptionParser(usage="usage: %prog [options] recording.wav [output_direct
 parser.add_option("-b", "--baselineTime", dest = "baselineTime",
                     help = "number of samples at beginning of recording used to calculate spike threshold",
                     default = 441000, type='int')
+parser.add_option("-B", "--butter", dest = "butter",
+                    help = "use a butterworth not wavelet filter",
+                    default = False, action = "store_true")
 parser.add_option("-c", "--chunkSize", dest = "chunkSize",
                     help = "data is processed in chunks (to reduce mem usage). Number of samples to read per chunk",
                     default = 4410000, type='int')
@@ -183,8 +186,9 @@ else:
     def waiting_file_lock(lock_file, delay=1):
         yield
 
-logging.debug("Filter low-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMax)[0])
-logging.debug("Filter high-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMin)[1])
+if not options.butter:
+    logging.debug("Filter low-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMax)[0])
+    logging.debug("Filter high-cutoff: %.3f" % waveletfilter.level_to_cutoffs(samplerate, options.filterMin)[1])
 
 if options.slide:
     logging.debug("Using sliding threshold")
@@ -193,24 +197,24 @@ else:
     # find threshold
     af.seek(frameStart)
     with waiting_file_lock(options.lockfile, 1):
-        if options.neo:
-            threshold = detect.neo_calculate_threshold(\
-                            waveletfilter.waveletfilter(\
-                                af.read_frames(options.baselineTime),\
-                            minlevel = options.filterMin, maxlevel = options.filterMax),\
-                        n = options.nthresh)
+        if options.butter:
+            f = waveletfilter.butterfilter(af.read_frames(options.baselineTime), flow=500, fhigh=5000) # default options for now
         else:
-            threshold = detect.calculate_threshold(\
-                            waveletfilter.waveletfilter(\
-                                af.read_frames(options.baselineTime),\
-                            minlevel = options.filterMin, maxlevel = options.filterMax),\
-                        n = options.nthresh)
+            f = waveletfilter.waveletfilter(af.read_frames(options.baselineTime), minlevel = options.filterMin, maxlevel = options.filterMax)
+        if options.neo:
+            threshold = detect.neo_calculate_threshold(f, n = options.nthresh)
+        else:
+            threshold = detect.calculate_threshold(f, n = options.nthresh)
+        np.savetxt('pyc.dat', f)
     logging.debug("Found threshold: %f" % threshold)
 
 spikeindices = None
 spikewaveforms = None
 
 # thresholds = []
+
+maxVal = 0.
+minVal = 0.
 
 for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     af.seek(s+frameStart)
@@ -221,8 +225,13 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
         continue
     
     # filter
-    f = waveletfilter.waveletfilter(d, minlevel = options.filterMin, maxlevel = options.filterMax)
+    if options.butter:
+        f = waveletfilter.butterfilter(d)
+    else:
+        f = waveletfilter.waveletfilter(d, minlevel = options.filterMin, maxlevel = options.filterMax)
     
+    maxVal = max(f.max(), maxVal)
+    minVal = min(f.min(), minVal)
     
     # detect
     if options.neo:
@@ -256,6 +265,8 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
         # print spikewaveforms.shape, sw.shape, goodspikes, si[goodspikes].shape
         spikewaveforms = np.vstack((spikewaveforms, sw[goodspikes]))
         logging.debug("%i%% done: %i spikes" % (int((e * 100.) / nframes), len(spikeindices)))
+
+logging.debug("Max: %f  Min: %f" % (maxVal, minVal))
 
 # cleanup
 af.close()
