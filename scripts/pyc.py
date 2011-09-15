@@ -54,6 +54,9 @@ parser.add_option("-L", "--filterMin", dest = "filterMin",
 parser.add_option("-m", "--mat", dest = "mat",
                     help = "save results in a mat file",
                     default = False, action = "store_true")
+parser.add_option("-M", "--minwidth", dest = "minwidth",
+                    help = "minimum number of super threshold points to count a spike",
+                    default = 2, type='int')
 parser.add_option("-n", "--nthresh", type='float',
                     help = "n standard units used in threshold calculation",
                     default = 5)
@@ -63,12 +66,21 @@ parser.add_option("-N", "--nclusters", type='int',
 parser.add_option("-o", "--chunkOverlap", dest = "chunkOverlap",
                     help = "number of samples to overlap chunks",
                     default = 4410, type='int') # TODO better explanation
+parser.add_option("-O", "--oversample", dest = "oversample",
+                    help = "oversample N times waveforms for extreme finding",
+                    default = 4410, type='int') # TODO better explanation
 parser.add_option("-p", "--plot", dest = "plot",
                     help = "generate lots of plots",
                     default = False, action = "store_true")
+parser.add_option("-r", "--ref", dest = "ref",
+                    help = "detection refractory period",
+                    default = 44, type='int')
 parser.add_option("-s", "--slide", dest = "slide",
                     help = "use a sliding threshold (recalculated for each chunk)",
                     default = False, action = "store_true")
+parser.add_option("-S", "--slop", dest = "slop",
+                    help = "allow N sub-threshold points during spike detection",
+                    default = 0, type='int')
 parser.add_option("-t", "--timerange", dest = "timerange",
                     help = "time range (in samples, slice format (start:end]) over which to process the file",
                     default = ':')
@@ -244,7 +256,8 @@ for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
         currentThreshold = detect.calculate_threshold(f, n = options.nthresh)
         if abs(currentThreshold - threshold) > threshold*.5: logging.warning("Threshold dramatically changed: %f to %f" % (threshold, currentThreshold))
         if options.slide: threshold = currentThreshold
-        si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
+        # si, sw = detect.find_spikes(f, threshold, direction = options.detectionDirection, prew = options.prew, postw = options.postw)
+        si, sw = detect.find_spikes2(f, threshold, options.detectionDirection, options.prew, options.postw, options.ref, options.minwidth, options.slop, options.oversample)
     
     # thresholds.append((currentThreshold, s))
     

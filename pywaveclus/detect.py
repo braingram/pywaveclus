@@ -4,6 +4,33 @@ import logging
 
 import numpy as np
 
+import scipy.signal
+
+def interpolate_peak(data, pre = 40, post = 88, oversample = 10., find_extreme = lambda x: x.argmax()):
+    """
+    Use cubic bspline interpolation to estimate the actual peak given a sequence of samples
+    
+    """
+    # data len should be (pre + post) * 2
+    assert len(data) == (pre+post)*2, "Data length(%i) must be (pre+post)*2[%i]" % (len(data), (pre+post)*2)
+    
+    # find current peak
+    peakI = pre*2#find_extreme(data)
+    # pull out wave
+    wave = data[peakI-pre:peakI+post]
+    # fit bsplines
+    coeffs = scipy.signal.cspline1d(wave)
+    # generate oversampled wave
+    oversampled = scipy.signal.cspline1d_eval(coeffs, np.linspace(0,pre+post-1,(pre+post)*oversample))
+    # find peak of oversampled wave
+    oversampledT = np.linspace(0,len(wave)-1,len(oversampled))
+    opeakI = oversampledT[find_extreme(oversampled)]
+    # downsample oversampled wave to original sampling rate
+    retTs = np.linspace(opeakI-pre, opeakI+post-1, pre+post)
+    # retTs = oversampledT[opeakI-pre:opeakI+post]
+    ret = scipy.signal.cspline1d_eval(coeffs, retTs)
+    return ret
+
 def neo(data, N = 529):#265):
     # 
     # From: Neural Spike Sorting Under Nearly 0-dB Signal-to-Noise Ratio
@@ -92,6 +119,72 @@ def find_threshold_crossings(data, threshold, direction = 'neg'):
         return np.where(data < -threshold)[0]
     if direction == 'both':
         return np.union1d(np.where(data > threshold)[0], np.where(data < -threshold)[0])
+
+def find_spikes2(data, threshold, direction = 'neg', prew = 40, postw = 88, ref = 44, minwidth = 2,  slop = 0, oversample = 10):
+    crossings = find_threshold_crossings(data, threshold, direction)
+    if not len(crossings):
+        logging.debug("No spikes found")
+        return [], []
+    
+    if direction == 'pos':
+        find_extreme = lambda x: x.argmax()
+    elif direction == 'neg':
+        find_extreme = lambda x: x.argmin()
+    elif direction == 'both':
+        find_extreme = lambda x: np.abs(x).argmax()
+    else:
+        raise ValueError, "direction[%s] must be neg, pos, or both" % direction
+    
+    spikeindices = []
+    spikewaveforms = []
+    
+    #TODO artifact detection?
+    ndata = len(data)
+    start = crossings[0]
+    end = -ref
+    for i in xrange(len(crossings)-1):
+        c = crossings[i]
+        c2 = crossings[i+1]
+        if (c2 - c) > slop + 1:
+            # next crossings is NOT part of this spike
+            if (c - end) >= ref:
+                # print "Width:", (c-start)
+                if (c - start) >= minwidth:
+                    end = c
+                    # get spike
+                    # spikebounds.append([start,end])
+                    
+                    peaki = find_extreme(data[start:end]) + start
+                    fullwave = data[peaki-(prew*2):peaki+(postw*2)]
+                    if len(fullwave) == ((prew+postw)*2):
+                        # assert fullwave[prew*2] == data[peaki]
+                        spikeindices.append(peaki)
+                        spikewaveforms.append(interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
+                    else:
+                        logging.debug("Spike ran off end of data at frame %i[%i]" % (peaki, len(fullwave)))
+                    start = c2
+                else:
+                    logging.debug("Skipping thin spike[%i] at %i" % ((c-start), c))
+                    start = c2
+            else:
+                # print "spike found in refractory time, skipping:", c
+                logging.debug("Skipping spike in refractory time at %i" % c)
+                start = c2
+    
+    if (start > end):
+        end = crossings[-1]
+        if (end - start) > minwidth:
+            # get spike
+            # spikebounds.append([start,crossings[-1]])
+            peaki = find_extreme(data[start:end]) + start
+            fullwave = data[peaki-(prew*2):peaki+(postw*2)]
+            if len(fullwave) == ((prew+postw)*2):
+                spikeindices.append(peaki)
+                spikewaveforms.append(interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
+            else:
+                logging.debug("Spike ran off end of data at frame %i[%i]" % (peaki, len(fullwave)))
+    
+    return spikeindices, spikewaveforms
 
 def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref = 66):
     """
