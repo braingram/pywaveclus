@@ -12,7 +12,7 @@ verbose:
 filename:
 
 [reader]
-lockdir: /tmp/pyc_lock
+lockdir:
 chunksize: 441000
 chunkoverlap: 44100
 dtype: f8

@@ -15,6 +15,7 @@ def reader_from_config(cfg):
     if ext == '.wav':
         dtype = np.dtype(cfg.get('reader','dtype'))
         lockdir = cfg.get('reader','lockdir')
+        if lockdir.strip() == '': lockdir = None
         return audio.Reader(filename, dtype, lockdir)
     else:
         raise ValueError('Unknown extension %s [%s]' % (ext, filename))
