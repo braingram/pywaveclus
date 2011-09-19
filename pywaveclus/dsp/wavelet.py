@@ -10,13 +10,9 @@ import logging
 import numpy as np
 import pywt
 
-import scipy.signal
+from .. import utils
 
-def butterfilter(data, flow = 300, fhigh = 3000, sr = 44100., order = 3):
-    b, a = scipy.signal.butter(order, ((flow/(sr/2.)), (fhigh/(sr/2.))), 'pass')
-    return scipy.signal.filtfilt(b, a, data)
-
-def waveletfilter(data, maxlevel = 6, wavelet = 'db20', mode = 'sym', minlevel = 1):
+def filt(data, maxlevel = 6, wavelet = 'db20', mode = 'sym', minlevel = 1):
     """
     Filter a multi-channel signal using wavelet filtering.
         Named wavefilter in WaveClus
@@ -114,12 +110,6 @@ def calculate_cutoffs(samplingrate, maxlevel=None):
         maxlevel = int(np.ceil(np.log2(samplingrate) - 1))
     return samplingrate / (2 ** (np.arange(1,maxlevel+2)))
 
-def test_calculate_cutoffs():
-    sf = 44100
-    coffs = calculate_cutoffs(sf)
-    r = np.array([22050, 11025, 5512, 2756, 1378, 689, 344, 172, 86, 43, 21, 10, 5, 2, 1, 0])
-    assert all(coffs == r), "%s != %s" % (str(coffs), str(r))
-
 def level_to_cutoffs(samplingrate, level):
     """
     Calculate the cutoff frequencies for a single wavelet decomposition level
@@ -140,45 +130,61 @@ def level_to_cutoffs(samplingrate, level):
     """
     return (samplingrate / 2 ** (level+1), samplingrate / 2 ** level)
 
-def test_level_to_cutoffs():
-    sf = 44100
-    assert level_to_cutoffs(sf,1) == (11025, 22050), \
-        "level_to_cutoffs(%i,1) != (11025, 22050)" % \
-        (sf, str(level_to_cutoffs(sf,1)))
-
-def test_waveletfilter(plot=False):
-    logging.basicConfig(level=logging.DEBUG)
+def features(waveforms, nfeatures = 10, levels = 4, wavelet = 'haar'):
+    """
+    Given an array of spike waveforms, determine the best wavlet coefficients for clustering
+    by using the Kolmogorov-Smirnov test.
+        Was wave_features in WaveClus
     
-    # make test signal
-    Fs = 44100
-    freqs = [100,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000]
-    t = np.arange(Fs,dtype=np.float64) / float(Fs) # 1 second
-    x = np.zeros(len(t))
-    for f in freqs:
-        x += np.sin(t * f * 2. * np.pi)
-    x /= len(freqs)
-    # print t,x
+    Parameters
+    ----------
+    waveforms : 2d array
+        Spike waveforms, where waveforms[0] is the waveform for the first spike
+    nfeatures : int
+        Number of resulting measured features. Was inputs in WaveClus
+    levels : int
+        Number of wavelet levels for wavedec. Was scales in WaveClus
     
-    filtered = waveletfilter(x, minlevel=3, maxlevel=6)
-    assert len(filtered) == len(x),\
-        "len(filtered)[%i] != len(x)[%i]" % (len(filtered), len(x))
+    Returns
+    -------
+    features : 2d array
+        Resulting spike features, where features[0] are the features for the first spike.
+        shape = (len(waveforms), nfeatures)
+    """
+    assert nfeatures > 0, "nfeatures[%i] must be > 0" % nfeatures
+    assert levels > 0, "levels[%i] must be > 0" % levels
+    if type(waveforms) != np.ndarray:
+        waveforms = np.array(waveforms)
+    assert waveforms.ndim == 2, "waveforms.ndim[%i] must be == 2" % waveforms.ndim
+    nwaveforms = len(waveforms)
     
-    # TODO: test effectiveness of cutoffs
+    # test for size of coefficient vector
+    get_coeffs = lambda wf: np.array([i for sl in pywt.wavedec(wf, wavelet, level=levels) for i in sl][:len(wf)])
+    tr = get_coeffs(waveforms[0])
+    ncoeffs = len(tr)
     
-    if plot:
-        import pylab as pl
-        pl.subplot(221)
-        pl.plot(t,x)
-        pl.subplot(222)
-        pl.psd(x,Fs=Fs)
-        pl.subplot(223)
-        pl.plot(t,filtered)
-        pl.subplot(224)
-        pl.psd(filtered,Fs=Fs)
+    coeffs = np.zeros((nwaveforms, ncoeffs))
+    coeffs[0][:] = tr # store calculated coefficients for waveform 1
+    for i in xrange(1,len(waveforms)): # get coefficient for other waveforms
+        coeffs[i][:] = get_coeffs(waveforms[i])
     
-        pl.show()
-
-if __name__ == '__main__':
-    test_calculate_cutoffs()
-    test_level_to_cutoffs()
-    test_waveletfilter(True)
+    # KS test for coefficient selection
+    coefffitness = np.zeros(ncoeffs)
+    for i in xrange(ncoeffs):
+        thrdist = np.std(coeffs[:,i],ddof=1) * 3
+        thrdistmin = np.mean(coeffs[:,i]) - thrdist
+        thrdistmax = np.mean(coeffs[:,i]) + thrdist
+        # test for how many points lie within 3 std dev of mean
+        culledcoeffs = coeffs[(coeffs[:,i] > thrdistmin) & (coeffs[:,i] < thrdistmax),i]
+        if len(culledcoeffs) > 10:
+            coefffitness[i] = utils.ks(culledcoeffs)
+        # else 0 (see coefffitness definition)
+    # print coefffitness
+    # store the indices of the 'good' coefficients
+    ind = np.argsort(coefffitness)
+    goodcoeff = ind[::-1][:nfeatures]
+    # print goodcoeff
+    # print ind
+    
+    # this returns features
+    return coeffs[:,goodcoeff]

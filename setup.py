@@ -40,9 +40,11 @@ def get_version():
 setup(
     name='pywaveclus',
     
-    packages = ['pywaveclus','pywaveclus/tests'],
+    packages = ['pywaveclus','pywaveclus/cluster','pywaveclus/data',\
+                'pywaveclus/detect','pywaveclus/dsp','pywaveclus/feature',\
+                'pywaveclus/process','pywaveclus/template'],
     package_data={'pywaveclus': ['bin/*']},
-    scripts=['scripts/pyc.py'],
+    scripts=['scripts/pyc.py','scripts/pycluster.py'],
     version=get_version(),
 
     include_package_data=True,

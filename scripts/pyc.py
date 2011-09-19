@@ -210,9 +210,9 @@ else:
     af.seek(frameStart)
     with waiting_file_lock(options.lockfile, 1):
         if options.butter:
-            f = waveletfilter.butterfilter(af.read_frames(options.baselineTime), flow=500, fhigh=5000) # default options for now
+            f = waveletfilter.butterfilter(af.read_frames(options.baselineTime, dtype=np.int16), flow=500, fhigh=5000) # default options for now
         else:
-            f = waveletfilter.waveletfilter(af.read_frames(options.baselineTime), minlevel = options.filterMin, maxlevel = options.filterMax)
+            f = waveletfilter.waveletfilter(af.read_frames(options.baselineTime, dtyp=np.int16), minlevel = options.filterMin, maxlevel = options.filterMax)
         if options.neo:
             threshold = detect.neo_calculate_threshold(f, n = options.nthresh)
         else:
@@ -231,7 +231,7 @@ minVal = 0.
 for (s, e) in chunk(nframes, options.chunkSize, options.chunkOverlap):
     af.seek(s+frameStart)
     with waiting_file_lock('/tmp/pyc.lock', 1):
-        d = af.read_frames(e-s)
+        d = af.read_frames(e-s, dtype=np.int16)
     if len(d) == 0:
         logging.warning("Read 0 frames from file??")
         continue

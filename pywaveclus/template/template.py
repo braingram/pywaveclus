@@ -43,22 +43,6 @@ def match(traces, clusters, method = 'center', **kwargs):
     clusters = [np.array(c,dtype=int) for c in clusters] # convert back to 2d array
     return clusters
 
-def test_match():
-    c1 = np.random.randn(10,3) * .1 + 1.0
-    c2 = np.random.randn(10,3) * .05 + 2.0
-    traces = np.vstack((c1,c2))
-    clusters = [[19,], range(10), range(10,19)]
-    
-    clusters = match(traces, clusters, method='nn', kmin = 5)
-    r = [[], np.arange(10), np.arange(10,20)]
-    c = clusters
-    assert all([list(c[i]) == list(r[i]) for i in xrange(len(c))]), "nn:%s" % str(clusters)
-    
-    clusters = match(traces, clusters, method='center')
-    r = [[], np.arange(10), np.arange(10,20)]
-    c = clusters
-    assert all([list(c[i]) == list(r[i]) for i in xrange(len(c))]), "center:%s" % str(clusters)
-
 def nearestneighbor(x, vectors, maxdist, k = 1):
     """
     Parameters
@@ -91,29 +75,6 @@ def nearestneighbor(x, vectors, maxdist, k = 1):
     if len(conforming) == 0:
         return np.array([],dtype=int)
     return conforming[np.argsort(dists[conforming])][:k]
-
-def test_nearestneighbor():
-    vs = np.mgrid[:5,:5][0] / 4. # 5x5, row values 0. -> 1.
-    p = np.ones(5) * 0.5
-    indices = nearestneighbor(p, vs, 0.1)
-    assert len(indices) == 1, "len(indices)[%i] should == 1" % len(indices)
-    assert indices[0] == 2, "indices[0] = %i should == 2" % indices[0]
-    
-    indices = nearestneighbor(p, vs, 0.6)
-    assert len(indices) == 1, "len(indices)[%i] should == 1" % len(indices)
-    assert indices[0] == 2, "indices[0] = %i should == 2" % indices[0]
-    
-    indices = nearestneighbor(p, vs, 0.6, 3)
-    assert len(indices) == 3, "len(indices)[%i] should == 3" % len(indices)
-    assert indices[0] == 2, "indices[0] = %i should == 2" % indices[0]
-    assert indices[1] in [1,3], "indices[1] = %i should == 1 or 3" % indices[1]
-    assert indices[2] in [1,3], "indices[2] = %i should == 1 or 3" % indices[2]
-    
-    indices = nearestneighbor(p, vs, 0.6, 5)
-    assert len(indices) == 3, "len(indices)[%i] should == 3" % len(indices)
-    assert indices[0] == 2, "indices[0] = %i should == 2" % indices[0]
-    assert indices[1] in [1,3], "indices[1] = %i should == 1 or 3" % indices[1]
-    assert indices[2] in [1,3], "indices[2] = %i should == 1 or 3" % indices[2]
 
 def nn(traces, clusters, nsd = 3, k = 10, kmin = 10):
     """
@@ -155,15 +116,6 @@ def nn(traces, clusters, nsd = 3, k = 10, kmin = 10):
         matches.append(cvotes.index(max(cvotes))+1) # cluster w/most neighbors
     return matches
 
-def test_nn():
-    c1 = np.random.randn(10,3) * .1 + 1.0
-    c2 = np.random.randn(10,3) * .05 + 2.0
-    traces = np.vstack((c1,c2))
-    clusters = [[19,], range(10), range(10,19)]
-    matches = nn(traces, clusters, kmin = 5)
-    assert len(matches) == 1, "len(matches)[%i] should be == 1" % len(matches)
-    assert matches[0] == 2, "matches[%i] should be == 2" % matches[0]
-
 def center(traces, clusters, nsd = 3):
     """
     Parameters
@@ -196,14 +148,6 @@ def center(traces, clusters, nsd = 3):
             matches.append(n[0]+1)
     return matches
 
-def test_center():
-    c1 = np.random.randn(10,3) * .1 + 1.0
-    c2 = np.random.randn(10,3) * .05 + 2.0
-    traces = np.vstack((c1,c2))
-    clusters = [[19,], range(10), range(10,19)]
-    matches = center(traces, clusters)
-    assert len(matches) == 1, "len(matches)[%i] should be == 1" % len(matches)
-    assert matches[0] == 2, "matches[%i] should be == 2" % matches[0]
 # 
 # def ml(traces, clusters):
 #     """
