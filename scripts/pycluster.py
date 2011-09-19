@@ -15,9 +15,8 @@ cfg, times, waves, clusters, info = pywaveclus.process.process.process_file()
 
 # get output directory (assign default if missing)
 outdir = cfg.get('main','outputdir').strip()
-if outdir == '':
-    filename = cfg.get('main','filename')
-    outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
+filename = cfg.get('main','filename')
+if outdir == '': outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
 
 if not os.path.exists(outdir): os.makedirs(outdir)
 logging.root.addHandler(logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
