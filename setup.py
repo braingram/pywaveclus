@@ -41,7 +41,7 @@ setup(
     name='pywaveclus',
     
     packages = ['pywaveclus','pywaveclus/cluster','pywaveclus/data',\
-                'pywaveclus/detect','pywaveclus/dsp','pywaveclus/feature',\
+                'pywaveclus/detect','pywaveclus/dsp',\
                 'pywaveclus/process','pywaveclus/template'],
     package_data={'pywaveclus': ['bin/*']},
     scripts=['scripts/pyc.py','scripts/pycluster.py'],
