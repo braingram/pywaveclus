@@ -92,4 +92,4 @@ def parse_time_range(timerange, minVal, maxVal, toVal=int):
     except Exception as E:
         raise ValueError("Count not convert %s to %s: %s" % (end, toVal, E))
     
-    return startVal, endVal
+    return max(startVal,minVal), min(endVal, maxVal)
