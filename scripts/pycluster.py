@@ -10,16 +10,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 cfg, times, waves, clusters, info = pywaveclus.process.process.process_file()
 
-
 # ------------------------------------- move this into process_file at some point
 
 # get output directory (assign default if missing)
-outdir = cfg.get('main','outputdir').strip()
+# outdir = cfg.get('main','outputdir').strip()
 filename = cfg.get('main','filename')
 if outdir == '': outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
-
-if not os.path.exists(outdir): os.makedirs(outdir)
-logging.root.addHandler(logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
+# 
+# if not os.path.exists(outdir): os.makedirs(outdir)
+# logging.root.addHandler(logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
 
 outfile = '/'.join((outdir, os.path.splitext(os.path.basename(filename))[0])) + '.h5'
 logging.debug("Saving results to %s" % outfile)

@@ -40,6 +40,14 @@ def get_operations(customCfg = None, options = None):
 
 def process_file(customCfg = None, options = None):
     cfg, reader, ffunc, dfunc, cfunc = get_operations(customCfg, options)
+    
+    outdir = cfg.get('main','outputdir').strip()
+    filename = cfg.get('main','filename')
+    if outdir == '': outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
+    
+    if not os.path.exists(outdir): os.makedirs(outdir)
+    logging.root.addHandler(logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
+    
     cfg.pretty_print(logging.debug)
     
     csize = cfg.getint('reader','chunksize')
