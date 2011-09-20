@@ -79,6 +79,7 @@ pl.suptitle("Spike Features")
 
 for cl in xrange(nclusters):
     gi = np.where(clusters == cl)[0]
+    if (len(gi) == 0): continue
     st = times[gi]
     sw = waves[gi]
     se = sw[:,pre]
