@@ -56,6 +56,7 @@ hdfFile.close()
 
 
 # generate plots
+logging.debug("Plotting")
 
 times = np.array(times)
 waves = np.array(waves)
@@ -100,6 +101,7 @@ for cl in xrange(nclusters):
     
     # plot features
 
+logging.debug("Saving plots")
 for (i,name) in enumerate(['times','waves','features']):
     pl.figure(i+1)
     pl.savefig('/'.join((outdir, name + '.png')))
