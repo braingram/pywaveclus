@@ -2,6 +2,9 @@
 
 import logging, os
 
+import numpy as np
+import pylab as pl
+import matplotlib
 import tables
 
 import pywaveclus
@@ -50,3 +53,53 @@ for i in xrange(len(times)):
 logging.debug("closing hdf5 file")
 spiketable.flush()
 hdfFile.close()
+
+
+# generate plots
+
+times = np.array(times)
+waves = np.array(waves)
+clusters = np.array(clusters)
+nclusters = np.max(clusters) + 1
+colors = matplotlib.cm.get_cmap('jet',nclusters)
+
+
+pl.figure(1)
+pl.suptitle('Spike Times')
+pl.xlabel('Time(samples)')
+pl.ylabel('Amplitude')
+
+pl.figure(2, figsize=(nclusters*3,6))
+pl.suptitle("Spike Waveforms")
+pl.ylabel("Amplitude")
+
+pl.figure(3)
+pl.suptitle("Spike Features")
+
+for cl in xrange(nclusters):
+    gi = np.where(clusters == cl)[0]
+    st = times[gi]
+    sw = waves[gi]
+    se = sw[:,pre]
+    c = colors(cl)
+    # plot times
+    pl.figure(1)
+    pl.scatter(st,se,label='%i' % cl, color=c)
+    
+    # plot waves
+    pl.figure(2)
+    pl.subplot(2,nclusters,cl+1)
+    pl.plot(sw, color=c)
+    pl.title("N=%i" % len(sw))
+    pl.subplot(2,nclusters,cl*nclusters+1)
+    av = np.average(sw,0)
+    sd = np.std(sw,0,ddof=1)
+    se = sd / np.sqrt(len(sw))
+    pl.fill_between(range(len(av)), av+se*1.96, av-se*1.96, color=c, alpha=0.5)
+    pl.plot(av, color=c)
+    
+    # plot features
+
+for (i,name) in enumerate(['times','waves','features']):
+    pl.figure(i+1)
+    pl.savefig('/'.join((outdir, name + '.png')))
