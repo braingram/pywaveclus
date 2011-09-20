@@ -91,7 +91,7 @@ for cl in xrange(nclusters):
     # plot waves
     pl.figure(2)
     pl.subplot(2,nclusters,cl+1)
-    pl.plot(sw, color=c)
+    pl.plot(sw.T, color=c)
     pl.title("N=%i" % len(sw))
     pl.subplot(2,nclusters,cl+nclusters+1)
     av = np.average(sw,0)
