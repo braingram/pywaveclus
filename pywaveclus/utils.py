@@ -78,7 +78,7 @@ def parse_time_range(timerange, minVal, maxVal, toVal=int):
         tokens = timerange.split(':')
         assert len(tokens) == 2, "Invalid timerange[%s]" % timerange
         start = tokens[0]
-        end = tokens[0]
+        end = tokens[1]
     else:
         start = str(minVal)
         end = timerange

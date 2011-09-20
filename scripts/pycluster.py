@@ -10,10 +10,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 cfg, times, waves, clusters, info = pywaveclus.process.process.process_file()
 
+logging.debug("%i spikes before saving" % len(times))
+
 # ------------------------------------- move this into process_file at some point
 
 # get output directory (assign default if missing)
-# outdir = cfg.get('main','outputdir').strip()
+outdir = cfg.get('main','outputdir').strip()
 filename = cfg.get('main','filename')
 if outdir == '': outdir = os.path.dirname(os.path.abspath(filename)) + '/pyc_' + os.path.basename(filename)
 # 

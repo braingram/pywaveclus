@@ -2,6 +2,7 @@
 
 import config
 import logging
+import os
 
 import numpy as np
 
@@ -54,12 +55,15 @@ def process_file(customCfg = None, options = None):
     coverlap = cfg.getint('reader','chunkoverlap')
     
     start, end = utils.parse_time_range(cfg.get('main','timerange'), 0, reader.nframes, int)
+    logging.debug("Timerange: %i to %i samples" % (start, end))
+    logging.debug("Chunk size %i, overlap %i" % (csize, coverlap))
     
     pre = cfg.getint('detect','pre')
     assert pre*2 < coverlap, "chunk overlap[%i] must be more than 2*pre[%i]" % (coverlap, pre*2)
     
     waveforms = None
     indices = None
+    nspikes = 0
     for chunk, start, end in reader.chunk(start, end, csize, coverlap):
         sis, sws = dfunc(ffunc(chunk))
         logging.debug("Found %i spikes between %i and %i" % (len(sis), start, end))
@@ -73,6 +77,8 @@ def process_file(customCfg = None, options = None):
         
         sis += start
         
+        nspikes += len(goodIs)
+        
         if waveforms is None:
             indices = sis[goodIs]
             waveforms = sws[goodIs]
@@ -80,9 +86,17 @@ def process_file(customCfg = None, options = None):
             indices = np.hstack((indices, sis[goodIs]))
             waveforms =  np.vstack((waveforms, sws[goodIs]))
     
+    
+    logging.debug("%i spikes (by nspikes)" % nspikes)
+    if not (indices is None):
+        logging.debug("%i spikes (by indices)" % len(indices))
+    else:
+        logging.debug("0 spikes (by indices)")
+    
     if waveforms is None:
         return cfg, [], [], [], []
     else:
+        logging.debug("%i spikes before clustering" % len(indices))
         clusters, info = cfunc(waveforms)
         return cfg, indices, waveforms, clusters, info
     
