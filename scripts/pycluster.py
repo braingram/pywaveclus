@@ -93,7 +93,7 @@ for cl in xrange(nclusters):
     pl.subplot(2,nclusters,cl+1)
     pl.plot(sw, color=c)
     pl.title("N=%i" % len(sw))
-    pl.subplot(2,nclusters,cl*nclusters+1)
+    pl.subplot(2,nclusters,cl+nclusters+1)
     av = np.average(sw,0)
     sd = np.std(sw,0,ddof=1)
     se = sd / np.sqrt(len(sw))
