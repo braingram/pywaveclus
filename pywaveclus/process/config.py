@@ -10,6 +10,7 @@ timerange:
 plot:
 verbose:
 filename:
+reference:
 
 [reader]
 lockdir:

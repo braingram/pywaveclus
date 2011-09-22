@@ -43,3 +43,20 @@ class Reader(scikits.audiolab.Sndfile):
         return self.__delattr__('channels')
     
     nchannels = property(_get_nchannels, _set_nchannels, _del_nchannels, "Number of channels")
+
+class ReferencedReader(Reader):
+    def __init__(self, filename, reference, dtype = np.int16, lockdir = None):
+        """
+        A file reader that is referenced to some other channel
+        """
+        Reader.__init__(self, filename, dtype, lockdir)
+        self.ref = Reader(reference, dtype, lockdir)
+
+    def seek(self, location):
+        Reader.seek(self, location)
+        self.ref.seek(location)
+    
+    def read_frames(self, nframes):
+        f = Reader.read_frames(self, nframes)
+        r = self.ref.read_frames(nframes)
+        return f - r

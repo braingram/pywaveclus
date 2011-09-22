@@ -19,6 +19,7 @@ def detect_from_config(reader, filt, cfg):
         n = cfg.getfloat('detect','nthresh')
         T = threshold.calculate_threshold(filt(d), n)
         logging.debug("Found threshold: %f" % T)
+        if T == 0.: return lambda x: ([], [])
         
         pre = cfg.getint('detect','pre')
         post = cfg.getint('detect','post')
