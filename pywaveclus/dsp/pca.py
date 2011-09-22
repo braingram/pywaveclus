@@ -32,7 +32,8 @@ def load_features(nfeatures):
     tfilename = os.path.dirname(os.path.abspath(__file__)) + '/../bin/timeseries.txt'
     features = np.loadtxt(ffilename)
     ts = np.loadtxt(tfilename)
-    return np.array([np.interp(np.arange(-40,88,dtype=np.float64)/44100.,ts,fs) for fs in features]).astype(np.float64)[:nfeatures]
+    global FEATURES
+    FEATURES = np.array([np.interp(np.arange(-40,88,dtype=np.float64)/44100.,ts,fs) for fs in features]).astype(np.float64)[:nfeatures]
 
 def project_waveform(waveform):
     global FEATURES
