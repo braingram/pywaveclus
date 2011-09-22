@@ -43,7 +43,8 @@ minref = 22 # 0.0005 s at 44100 Hz
 
 logging.debug("writing to hdf5 file")
 for i in xrange(len(times)-1):
-    if (times[i+1] - times[i] < minref) and (clusters[i+1] == clusters[i]):
+    nspike = np.where(clusters[i+1:] == clusters[i])[0]
+    if (len(nspike) > 0) and (times[nspike[0]+i+1] - times[i] < minref):
         # caton skips spikes that are the same cluster and
         # occur close together in time
         logging.debug("Throwing away spike at %i" % times[i])
