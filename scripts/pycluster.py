@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import logging, os
+import logging, os, sys
 
 import numpy as np
 import pylab as pl
@@ -63,6 +63,9 @@ spiketable.flush()
 hdfFile.close()
 
 
+if len(times) == 0:
+    logging.debug("No spikes found")
+    sys.exit(0)
 # generate plots
 logging.debug("Plotting")
 
