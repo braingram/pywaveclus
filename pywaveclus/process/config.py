@@ -11,6 +11,7 @@ plot:
 verbose:
 filename:
 reference:
+adjacentfiles:
 
 [reader]
 lockdir:
