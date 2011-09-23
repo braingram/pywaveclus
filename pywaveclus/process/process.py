@@ -64,9 +64,9 @@ def process_file(customCfg = None, options = None):
     waveforms = None
     indices = None
     nspikes = 0
-    for chunk, start, end in reader.chunk(start, end, csize, coverlap):
+    for chunk, chunkstart, chunkend in reader.chunk(start, end, csize, coverlap):
         sis, sws = dfunc(ffunc(chunk))
-        logging.debug("Found %i spikes between %i and %i" % (len(sis), start, end))
+        logging.debug("Found %i spikes between %i and %i" % (len(sis), chunkstart, chunkend))
         
         sis = np.array(sis)
         sws = np.array(sws)
@@ -75,7 +75,7 @@ def process_file(customCfg = None, options = None):
         
         if len(goodIs) == 0: continue
         
-        sis += start
+        sis += chunkstart # make times releative to first sample (audio time 0)
         
         nspikes += len(goodIs)
         
@@ -86,6 +86,25 @@ def process_file(customCfg = None, options = None):
             indices = np.hstack((indices, sis[goodIs]))
             waveforms =  np.vstack((waveforms, sws[goodIs]))
     
+    # get waveforms from 'adjacent' channels
+    newwaves = []
+    adjacentFiles = cfg.get('main','adjacentfiles')
+    if adjacentFiles.strip() != '':
+        adjacentFiles = adjacentFiles.split()
+        for adjacentFile in adjacentFiles:
+            dtype = cfg.get('reader','dtype')
+            lockdir = cfg.get('reader','lockdir')
+            if lockdir.strip() == '': lockdir = None
+            ref = cfg.get('main','reference')
+            if ref.strip() != '':
+                adj = data.audio.ReferencedReader(adjacentFile, ref, dtype, lockdir)
+            else:
+                adj = data.audio.Reader(adjacentFile, dtype, lockdir)
+
+            for si in indices:
+                pass
+
+
     
     logging.debug("%i spikes (by nspikes)" % nspikes)
     if not (indices is None):
