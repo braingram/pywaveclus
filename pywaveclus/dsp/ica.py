@@ -15,5 +15,5 @@ def features(waveforms, nfeatures = 6):
         waves.append(wf)
     waves = np.array(waves)
     ica = scikits.learn.decomposition.FastICA(nfeatures)
-    ica.fit(waves)
-    return ica.get_mixing_matrix()
+    ica.fit(waves.T)
+    return ica.transform(waves.T).T
