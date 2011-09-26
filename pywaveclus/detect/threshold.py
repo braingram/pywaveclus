@@ -5,6 +5,7 @@ import logging
 import numpy as np
 
 from .. import dsp
+from .. import utils
 
 def calculate_threshold(data, n = 5):
     """
@@ -41,17 +42,18 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
         logging.debug("No threshold crossings found over %f to %f at T:%f" % (data.min(), data.max(), threshold))
         return [], []
     
-    if direction == 'pos':
-        find_extreme = lambda x: x.argmax()
-    elif direction == 'neg':
-        find_extreme = lambda x: x.argmin()
-    elif direction == 'both':
-        find_extreme = lambda x: np.abs(x).argmax()
-    else:
-        raise ValueError, "direction[%s] must be neg, pos, or both" % direction
+    find_extreme = utils.find_extreme(direction)
+    #if direction == 'pos':
+    #    find_extreme = lambda x: x.argmax()
+    #elif direction == 'neg':
+    #    find_extreme = lambda x: x.argmin()
+    #elif direction == 'both':
+    #    find_extreme = lambda x: np.abs(x).argmax()
+    #else:
+    #    raise ValueError, "direction[%s] must be neg, pos, or both" % direction
     
     spikeindices = []
-    spikewaveforms = []
+    #spikewaveforms = []
     
     #TODO artifact detection?
     ndata = len(data)
@@ -104,7 +106,7 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
                 fullwave = data[peaki-(prew*2):peaki+(postw*2)]
                 if len(fullwave) == ((prew+postw)*2):
                     spikeindices.append(peaki)
-                    spikewaveforms.append(dsp.interpolate.interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
+                    #spikewaveforms.append(dsp.interpolate.interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
                     end = c
             start = crossings[i+1]
     
@@ -146,11 +148,11 @@ def find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref =
             fullwave = data[peaki-(prew*2):peaki+(postw*2)]
             if len(fullwave) == ((prew+postw)*2):
                 spikeindices.append(peaki)
-                spikewaveforms.append(dsp.interpolate.interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
+                #spikewaveforms.append(dsp.interpolate.interpolate_peak(fullwave, prew, postw, oversample, find_extreme))
             else:
                 logging.debug("Spike ran off end of data at frame %i[%i]" % (peaki, len(fullwave)))
     
-    return spikeindices, spikewaveforms
+    return spikeindices#, spikewaveforms
 
 def _old_find_spikes(data, threshold, direction = 'neg', prew = 40, postw = 88, ref = 66):
     """

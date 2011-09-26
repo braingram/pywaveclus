@@ -6,6 +6,7 @@ import os
 import time
 import sys
 
+import numpy as np
 import scipy.stats
 
 def get_os():
@@ -93,3 +94,13 @@ def parse_time_range(timerange, minVal, maxVal, toVal=int):
         raise ValueError("Count not convert %s to %s: %s" % (end, toVal, E))
     
     return max(startVal,minVal), min(endVal, maxVal)
+
+def find_extreme(direction):
+    if direction == 'pos':
+        return lambda x: x.argmax()
+    elif direction == 'neg':
+        return lambda x: x.argmin()
+    elif direction == 'both':
+        return lambda x: np.abs(x).argmax()
+    else:
+        raise ValueError("Unknown direction [%s] for find_extreme" % direction)

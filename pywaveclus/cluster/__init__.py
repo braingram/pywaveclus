@@ -10,6 +10,7 @@ def cluster_from_config(cfg):
     method = cfg.get('cluster','method')
     
     if method == 'spc':
+        raise NotImplemented("SPC cannot handle new 'adjacent files'")
         nfeatures = cfg.getint('cluster','nfeatures')
         levels = cfg.getint('cluster','levels')
         wtype = cfg.get('cluster','wavelet')

@@ -30,10 +30,11 @@ logging.debug("Saving results to %s" % outfile)
 
 pre = cfg.getint('detect','pre')
 post = cfg.getint('detect','post')
+nadj = len(cfg.get('main','adjacentfiles').split())
 
 class description(tables.IsDescription):
     time = tables.Int32Col()
-    wave = tables.Float64Col(shape=(pre + post,))
+    wave = tables.Float64Col(shape=(pre + post,nadj+1))
     clu = tables.Int8Col()
 
 hdfFile = tables.openFile(outfile,"w")
@@ -94,7 +95,7 @@ for cl in xrange(nclusters):
     gi = gi[0]
     if (len(gi) == 0): continue
     st = times[gi]
-    sw = waves[gi]
+    sw = waves[gi][0] # only plot first wave (from main channel)
     se = sw[:,pre]
     c = colors(cl)
     # plot times

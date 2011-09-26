@@ -32,6 +32,9 @@ ref: 44
 oversample: 10
 sliding: False
 
+[extract]
+method: simple
+
 [filter]
 method: butter
 low: 500

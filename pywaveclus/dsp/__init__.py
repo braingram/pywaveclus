@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import butter
+import ica
 import interpolate
 import pca
 import threshold
 import wavelet
 
-__all__ = ['butter', 'interpolate', 'pca', 'threshold', 'wavelet']
+__all__ = ['butter', 'ica', 'interpolate', 'pca', 'threshold', 'wavelet']
 
 def filt_from_config(config):
     method = config.get('filter','method')

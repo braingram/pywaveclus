@@ -10,6 +10,7 @@ from .. import data
 from .. import dsp
 from .. import detect
 from .. import cluster
+from .. import extract
 from .. import utils
 
 def get_operations(customCfg = None, options = None):
@@ -33,14 +34,15 @@ def get_operations(customCfg = None, options = None):
     # TODO remove spikes in chunk overlap
     
     # extract ? part of detect ?
+    efunc = extract.extract_from_config(cfg)
     
     # cluster
     cfunc = cluster.cluster_from_config(cfg)
     
-    return cfg, reader, ffunc, dfunc, cfunc
+    return cfg, reader, ffunc, dfunc, efunc, cfunc
 
 def process_file(customCfg = None, options = None):
-    cfg, reader, ffunc, dfunc, cfunc = get_operations(customCfg, options)
+    cfg, reader, ffunc, dfunc, efunc, cfunc = get_operations(customCfg, options)
     
     outdir = cfg.get('main','outputdir').strip()
     filename = cfg.get('main','filename')
@@ -61,15 +63,15 @@ def process_file(customCfg = None, options = None):
     pre = cfg.getint('detect','pre')
     assert pre*2 < coverlap, "chunk overlap[%i] must be more than 2*pre[%i]" % (coverlap, pre*2)
     
-    waveforms = None
+    #waveforms = None
     indices = None
     nspikes = 0
     for chunk, chunkstart, chunkend in reader.chunk(start, end, csize, coverlap):
-        sis, sws = dfunc(ffunc(chunk))
+        sis = dfunc(ffunc(chunk))
         logging.debug("Found %i spikes between %i and %i" % (len(sis), chunkstart, chunkend))
         
         sis = np.array(sis)
-        sws = np.array(sws)
+        #sws = np.array(sws)
         
         goodIs = np.where(sis < (csize + pre*2.))[0]
         
@@ -79,18 +81,19 @@ def process_file(customCfg = None, options = None):
         
         nspikes += len(goodIs)
         
-        if waveforms is None:
+        if indices is None:
             indices = sis[goodIs]
-            waveforms = sws[goodIs]
+            #waveforms = sws[goodIs]
         else:
             indices = np.hstack((indices, sis[goodIs]))
-            waveforms =  np.vstack((waveforms, sws[goodIs]))
+            #waveforms =  np.vstack((waveforms, sws[goodIs]))
     
     # get waveforms from 'adjacent' channels
-    newwaves = []
     adjacentFiles = cfg.get('main','adjacentfiles')
+    readers = [reader,]
     if adjacentFiles.strip() != '':
         adjacentFiles = adjacentFiles.split()
+        readers = [reader,]
         for adjacentFile in adjacentFiles:
             dtype = cfg.get('reader','dtype')
             lockdir = cfg.get('reader','lockdir')
@@ -100,12 +103,11 @@ def process_file(customCfg = None, options = None):
                 adj = data.audio.ReferencedReader(adjacentFile, ref, dtype, lockdir)
             else:
                 adj = data.audio.Reader(adjacentFile, dtype, lockdir)
+            readers.append(adj)
+            #for si in indices:
+            #    pass
+    waveforms = np.array(efunc(readers, indices))
 
-            for si in indices:
-                pass
-
-
-    
     logging.debug("%i spikes (by nspikes)" % nspikes)
     if not (indices is None):
         logging.debug("%i spikes (by indices)" % len(indices))
