@@ -3,7 +3,7 @@
 from .. import dsp
 from .. import utils
 
-def cubic(readers, indices, pre, post, direction, oversample):
+def cubic(readers, indices, ffunc, pre, post, direction, oversample):
     """
     extract a spike waveform from one or many files
     uses first file to figure out resample location
@@ -16,7 +16,7 @@ def cubic(readers, indices, pre, post, direction, oversample):
         start = index - pre*2
         length = pre*2 + post*2
         main.seek(start)
-        data = main.read_frames(length)
+        data = ffunc(main.read_frames(length))
         if len(data) != pre*2+post*2: continue # check length
         # fit cubic spline to triggered file, and calculate resampling points
         maints, mainwave = dsp.interpolate.cubic(data, pre, post, oversample, find_extreme)
@@ -24,7 +24,7 @@ def cubic(readers, indices, pre, post, direction, oversample):
         for reader in readers[1:]:
             # use resampling points from triggered file to pull out data from other files
             reader.seek(start)
-            data = reader.read_frames(length)
+            data = ffunc(reader.read_frames(length))
             ts, ws = dsp.interpolate.cubic(data, pre, post, oversample, find_extreme, maints)
             wave.append(ws)
         waves.append(wave)

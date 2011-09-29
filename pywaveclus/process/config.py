@@ -65,7 +65,7 @@ def load(customCfgFile = None):
 
 class Config(ConfigParser.SafeConfigParser):
     
-    sections = ['main', 'reader', 'detect', 'filter', 'cluster', 'template']
+    sections = ['main', 'reader', 'detect', 'extract', 'filter', 'cluster', 'template']
     
     def __init__(self, *args, **kwargs):
         ConfigParser.SafeConfigParser.__init__(self, *args, **kwargs)

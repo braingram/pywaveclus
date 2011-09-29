@@ -89,30 +89,34 @@ pl.ylabel("Amplitude")
 pl.figure(3)
 pl.suptitle("Spike Features")
 
+logging.debug("Waveform array shape: %s" % str(waves.shape))
+
 for cl in xrange(nclusters):
     gi = np.where(clusters == cl)
     if (len(gi) == 0): continue
     gi = gi[0]
     if (len(gi) == 0): continue
     st = times[gi]
-    sw = waves[gi,0] # only plot first wave (from main channel)
+    sw = waves[gi,0,:] # only plot first wave (from main channel)
     se = sw[:,pre]
     c = colors(cl)
     # plot times
     pl.figure(1)
     pl.scatter(st,se,label='%i' % cl, color=c)
     
-    # plot waves
-    pl.figure(2)
-    pl.subplot(2,nclusters,cl+1)
-    pl.plot(sw.T, color=c)
-    pl.title("N=%i" % len(sw))
-    pl.subplot(2,nclusters,cl+nclusters+1)
-    av = np.average(sw,0)
-    sd = np.std(sw,0,ddof=1)
-    se = sd / np.sqrt(len(sw))
-    pl.fill_between(range(len(av)), av+se*1.96, av-se*1.96, color=c, alpha=0.5)
-    pl.plot(av, color=c)
+    for i in xrange(nadj+1):
+        sw = waves[gi,i,:]
+        # plot waves
+        pl.figure(2)
+        pl.subplot((nadj+1)*2,nclusters,cl+1+nclusters*(i*2))
+        pl.plot(sw.T, color=c)
+        pl.title("N=%i" % len(sw))
+        pl.subplot((nadj+1)*2,nclusters,cl+nclusters+1+nclusters*(i*2))
+        av = np.average(sw,0)
+        sd = np.std(sw,0,ddof=1)
+        se = sd / np.sqrt(len(sw))
+        pl.fill_between(range(len(av)), av+se*1.96, av-se*1.96, color=c, alpha=0.5)
+        pl.plot(av, color=c)
     
     # plot features
 
