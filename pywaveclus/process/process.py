@@ -90,12 +90,13 @@ def process_file(customCfg = None, options = None):
     
     # get waveforms from 'adjacent' channels
     adjacentFiles = cfg.get('main','adjacentfiles')
+    logging.debug("adjacent files: %s" % adjacentFiles)
     readers = [reader,]
     if adjacentFiles.strip() != '':
         adjacentFiles = adjacentFiles.split()
         readers = [reader,]
         for adjacentFile in adjacentFiles:
-            dtype = cfg.get('reader','dtype')
+            dtype = np.dtype(cfg.get('reader','dtype'))
             lockdir = cfg.get('reader','lockdir')
             if lockdir.strip() == '': lockdir = None
             ref = cfg.get('main','reference')

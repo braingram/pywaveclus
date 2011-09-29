@@ -25,8 +25,8 @@ def cluster(waveforms, nfeatures, minclusters, maxclusters, tmp = '/tmp', quiet 
     datafile = "/".join((tempdir, "k_input.fet.1"))
     outfile = "/".join((tempdir, "k_input.clu.1"))
     
-    #features = dsp.pca.features(waveforms, nfeatures)
-    features = dsp.ica.features(waveforms, nfeatures)
+    features = dsp.pca.features(waveforms, nfeatures)
+    #features = dsp.ica.features(waveforms, nfeatures)
     
     with open(datafile, 'w') as df:
         df.write('%i\n' % nfeatures)

@@ -50,7 +50,7 @@ order: 3
 #levels: 4
 #wavelet: haar
 method: klustakwik
-nfeatures: 3
+nfeatures: 6
 minclusters: 3
 maxclusters: 5
 
@@ -114,7 +114,11 @@ class Config(ConfigParser.SafeConfigParser):
             if key is None:
                 key = option
                 continue
-            self.set(section, key, option)
+            # option is value
+            val = option.strip()
+            if val[0] == '"': val = val[1:]
+            if val[-1] == '"': val = val[:-1]
+            self.set(section, key, val)
             key = None
         if not (key is None):
             raise AttributeError("Key [%s] missing value [section:%s]" % (key, section))

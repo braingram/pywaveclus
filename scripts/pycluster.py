@@ -34,7 +34,7 @@ nadj = len(cfg.get('main','adjacentfiles').split())
 
 class description(tables.IsDescription):
     time = tables.Int32Col()
-    wave = tables.Float64Col(shape=(pre + post,nadj+1))
+    wave = tables.Float64Col(shape=(pre + post))
     clu = tables.Int8Col()
 
 hdfFile = tables.openFile(outfile,"w")
@@ -50,7 +50,7 @@ for i in xrange(len(times)-1):
         # occur close together in time
         logging.debug("Throwing away spike at %i" % times[i])
     else:
-        spiketable.row['wave'] = waves[i]
+        spiketable.row['wave'] = waves[i][0]
         spiketable.row['time'] = times[i]
         spiketable.row['clu'] = clusters[i]
         spiketable.row.append()
@@ -95,7 +95,7 @@ for cl in xrange(nclusters):
     gi = gi[0]
     if (len(gi) == 0): continue
     st = times[gi]
-    sw = waves[gi][0] # only plot first wave (from main channel)
+    sw = waves[gi,0] # only plot first wave (from main channel)
     se = sw[:,pre]
     c = colors(cl)
     # plot times

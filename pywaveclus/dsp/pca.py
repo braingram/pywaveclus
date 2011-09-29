@@ -10,14 +10,20 @@ from scikits.learn.decomposition.pca import PCA
 global FEATURES
 FEATURES = None
 
-def features(waveforms, nfeatures = 3, usesaved = True):
-    p = PCA(nfeatures, whiten=True)
+def features(waveforms, nfeatures = 3, usesaved = False):
+    waves = []
+    for wave in waveforms:
+        wf = np.array([])
+        for ch in wave: wf = np.hstack((wf, ch))
+        waves.append(wf)
+    waves = np.array(waves)
+    p = PCA(nfeatures)#, whiten=True)
     if usesaved:
         global FEATURES
         if FEATURES is None: load_features(nfeatures)
-        return project_waveforms(waveforms)
+        return project_waveforms(waves)
     else:
-        return p.fit(waveforms).transform(waveforms)
+        return p.fit(waves).transform(waves)
     # Td = p.fit(waveforms).transform(waveforms)
     # import matplotlib
     # matplotlib.use('MacOSX')

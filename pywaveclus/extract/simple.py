@@ -11,9 +11,9 @@ def simple(readers, indices, pre, post):
         start = index - pre
         length = pre + post
         main.seek(start)
-        wave = main.read_frames(length)
-        if len(wave) != pre+post: continue # check length
-        wave.append(wave)
+        data = main.read_frames(length)
+        if len(data) != pre+post: continue # check length
+        wave.append(data)
         for reader in readers[1:]:
             reader.seek(start)
             wave.append(reader.read_frames(length))
