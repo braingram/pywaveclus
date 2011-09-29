@@ -23,7 +23,8 @@ def cluster_from_config(cfg):
         nfeatures = cfg.getint('cluster','nfeatures')
         minclusters = cfg.getint('cluster','minclusters')
         maxclusters = cfg.getint('cluster','maxclusters')
+        ftype = cfg.get('cluster','featuretype')
         
-        return lambda x: klustakwik.cluster(x, nfeatures, minclusters, maxclusters)
+        return lambda x: klustakwik.cluster(x, nfeatures, ftype, minclusters, maxclusters)
     else:
         raise ValueError("Unknown cluster method: %s" % method)

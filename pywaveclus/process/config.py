@@ -51,6 +51,7 @@ order: 3
 #wavelet: haar
 method: klustakwik
 nfeatures: 6
+featuretype: pca
 minclusters: 3
 maxclusters: 5
 

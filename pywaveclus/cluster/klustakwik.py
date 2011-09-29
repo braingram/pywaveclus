@@ -12,7 +12,7 @@ import numpy as np
 from .. import dsp
 from .. import utils
 
-def cluster(waveforms, nfeatures, minclusters, maxclusters, tmp = '/tmp', quiet = True):
+def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, tmp = '/tmp', quiet = True):
     """
     method: klustakwik
     nfeatures: 3
@@ -25,8 +25,12 @@ def cluster(waveforms, nfeatures, minclusters, maxclusters, tmp = '/tmp', quiet 
     datafile = "/".join((tempdir, "k_input.fet.1"))
     outfile = "/".join((tempdir, "k_input.clu.1"))
     
-    features = dsp.pca.features(waveforms.copy(), nfeatures)
-    #features = dsp.ica.features(waveforms, nfeatures)
+    if featuretype == 'pca':
+        features = dsp.pca.features(waveforms, nfeatures)
+    elif featuretype == 'ica':
+        features = dsp.ica.features(waveforms, nfeatures)
+    else:
+        raise ValueError("Unknown feature type[%s]" % featuretype)
     
     with open(datafile, 'w') as df:
         df.write('%i\n' % nfeatures)
