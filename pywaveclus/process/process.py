@@ -107,6 +107,7 @@ def process_file(customCfg = None, options = None):
             readers.append(adj)
             #for si in indices:
             #    pass
+    logging.debug("%i spikes (by nspikes)" % nspikes)
     waveforms = np.array(efunc(readers, indices, ffunc))
 
     logging.debug("%i spikes (by nspikes)" % nspikes)

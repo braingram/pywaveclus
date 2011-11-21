@@ -31,7 +31,7 @@ class Reader(scikits.audiolab.Sndfile):
     def chunk(self, start, end, chunksize, overlap):
         for (s,e) in utils.chunk(end-start, chunksize, overlap):
             self.seek(s + start)
-            yield self.read_frames(e-s), s, e
+            yield self.read_frames(e-s), s+start, e+start
         return
     
     # map channels property to nchannels
