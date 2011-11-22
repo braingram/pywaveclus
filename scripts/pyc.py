@@ -14,6 +14,8 @@ from scipy.signal import resample
 
 from pywaveclus import waveletfilter, detect, waveletfeatures, cluster, template
 
+raise Exception("This script is outdated, use pycluster.py instead")
+
 # ------------- these are just default files because I'm lazy -------------------
 filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/clip.wav'
 # filename = '/Users/graham/Repositories/coxlab/physiology_analysis/data/long.wav'
