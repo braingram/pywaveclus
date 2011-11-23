@@ -58,7 +58,8 @@ def test_spc(plot=False):
     # features = realfeatures
     
     clusters, (cdata, tree) = pywaveclus.cluster.spc.cluster(features)#, minclus = 15)
-    logging.info("Clusters: %s" % str([len(c) for c in clusters]))
+    #print clusters
+    logging.info("Clusters: %s" % str(clusters))
     # print len(unmatched)
     
     if plot:

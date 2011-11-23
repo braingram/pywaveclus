@@ -18,6 +18,7 @@ def detect_from_config(reader, filt, cfg):
     if method == 'threshold':
         n = cfg.getfloat('detect','nthresh')
         T = threshold.calculate_threshold(filt(d), n)
+        AT = T / float(n) * cfg.getfloat('detect','artifact')
         logging.debug("Found threshold: %f" % T)
         if T == 0.: return lambda x: ([], [])
         
@@ -30,7 +31,7 @@ def detect_from_config(reader, filt, cfg):
         oversample = cfg.getint('detect','oversample')
         sliding = cfg.getboolean('detect','sliding')
         
-        return lambda x: threshold.find_spikes(x, T, direction, pre, post, ref, minwidth, slop, oversample)
+        return lambda x: threshold.find_spikes(x, T, AT, direction, pre, post, ref, minwidth, slop, oversample)
     elif method == 'neo':
         raise NotImplemented
     else:

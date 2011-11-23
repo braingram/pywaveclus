@@ -22,6 +22,7 @@ dtype: f8
 [detect]
 method: threshold
 nthresh: 4.5
+artifact: 45.0
 baseline: 100000
 pre: 40
 post: 88

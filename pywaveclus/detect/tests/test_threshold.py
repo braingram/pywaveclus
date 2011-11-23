@@ -29,24 +29,25 @@ def test_find_spikes(plot=False):
     x[-4] = 2.
     
     threshold = pywaveclus.detect.threshold.calculate_threshold(x)
-    positivespikes = pywaveclus.detect.threshold.find_spikes(x, threshold, 'pos')
-    negativespikes = pywaveclus.detect.threshold.find_spikes(-x, threshold, 'neg')
-    bothspikes = pywaveclus.detect.threshold.find_spikes(x, threshold, 'both')
-    invbothspikes = pywaveclus.detect.threshold.find_spikes(-x, threshold, 'both')
+    positivespikes = pywaveclus.detect.threshold.find_spikes(x, threshold, np.inf, 'pos')
+    negativespikes = pywaveclus.detect.threshold.find_spikes(-x, threshold, np.inf, 'neg')
+    bothspikes = pywaveclus.detect.threshold.find_spikes(x, threshold, np.inf, 'both')
+    invbothspikes = pywaveclus.detect.threshold.find_spikes(-x, threshold, np.inf, 'both')
     
-    assert sum(np.array(bothspikes[0]) - np.array(invbothspikes[0])) == 0,\
+    #print bothspikes, invbothspikes
+    assert sum(np.array(bothspikes) - np.array(invbothspikes)) == 0,\
         "Found different # of spikes for both and both (on inverted data) detection"
-    assert sum(np.array(positivespikes[0]) - np.array(negativespikes[0])) == 0,\
+    assert sum(np.array(positivespikes) - np.array(negativespikes)) == 0,\
         "Found different # of spikes for pos and neg (on inverted data) detection"
     
-    prew = 5
-    postw = 5
-    spiketimes, spikewaveforms = pywaveclus.detect.threshold.find_spikes(x, threshold, 'both', prew=5, postw=5)
-    print np.array(spikewaveforms).shape
-    print spikewaveforms
-    print spiketimes
-    assert np.array(spikewaveforms).shape == (len(sts),prew+postw), \
-        "Invalid waveform shape[%s], should be %s" % (np.array(spikewaveforms).shape, (len(sts),prew+postw))
+    #prew = 5
+    #postw = 5
+    #spiketimes, spikewaveforms = pywaveclus.detect.threshold.find_spikes(x, threshold, np.inf, 'both', prew=5, postw=5)
+    #print np.array(spikewaveforms).shape
+    #print spikewaveforms
+    #print spiketimes
+    #assert np.array(spikewaveforms).shape == (len(sts),prew+postw), \
+    #    "Invalid waveform shape[%s], should be %s" % (np.array(spikewaveforms).shape, (len(sts),prew+postw))
     
     if plot:
         import pylab as pl
