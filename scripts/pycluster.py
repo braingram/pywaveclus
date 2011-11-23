@@ -70,9 +70,17 @@ if len(times) == 0:
 # generate plots
 logging.debug("Plotting")
 
-times = np.array(times)
-waves = np.array(waves)
-clusters = np.array(clusters)
+nspikes = len(times)
+if nspikes > 20000:
+    ds = nspikes / 20000
+    times = np.array(times[::ds])
+    waves = np.array(waves[::ds])
+    clusters = np.array(clusters[::ds])
+else:
+    times = np.array(times)
+    waves = np.array(waves)
+    clusters = np.array(clusters)
+
 nclusters = np.max(clusters) + 1
 colors = matplotlib.cm.get_cmap('jet',nclusters)
 
