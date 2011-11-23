@@ -118,6 +118,11 @@ def process_file(customCfg = None, options = None):
     
     if waveforms is None:
         return cfg, [], [], [], []
+    elif len(waveforms) < cfg.getint('cluster','minspikes'):
+        logging.warning("%i spikes less than minspikes [%i], assigning all to 1 cluster" % \
+                (len(waveforms), cfg.getint('cluster','minspikes')))
+        clusters = [1] * len(waveforms)
+        return cfg, indices, waveforms, clusters, None
     else:
         logging.debug("%i spikes before clustering" % len(indices))
         clusters, info = cfunc(waveforms)
