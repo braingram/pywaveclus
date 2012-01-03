@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+import warnings
+
 import numpy as np
 
-import scikits.audiolab
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import scikits.audiolab
 
 from .. import utils
 
