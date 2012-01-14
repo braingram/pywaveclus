@@ -63,11 +63,11 @@ def filt(data, maxlevel = 6, wavelet = 'db20', mode = 'sym', minlevel = 1):
         coeffs = pywt.wavedec(data[i,:], wavelet, mode=mode, level=maxlevel)
         # Destroy the approximation coefficients
         coeffs[0][:] = 0
-        maxlevel = len(coeffs)
+        lencoeffs = len(coeffs)
         # Highpass
         for lvl in np.arange(1,minlevel):
             # print 'zeroing level: %i at index %i of %i coeffs' % (lvl, maxlevel-lvl, len(coeffs))
-            coeffs[maxlevel-lvl][:] = 0
+            coeffs[lencoeffs-lvl][:] = 0
         # Reconstruct the signal and save it. If len(data[i,:]) is odd,
         # the array returned by pywt.waverec will have one extra value
         # at the end, so we need to make sure to trim the returned
