@@ -101,10 +101,10 @@ def process_file(customCfg = None, options = None):
             if lockdir.strip() == '': lockdir = None
             ref = cfg.get('main','reference')
             if ref.strip() != '':
-                adj = data.audio.ReferencedReader(adjacentFile, ref, dtype, lockdir)
+                readers.append(data.audio.ReferencedReader(adjacentFile, ref, dtype, lockdir))
             else:
-                adj = data.audio.Reader(adjacentFile, dtype, lockdir)
-            readers.append(adj)
+                readers.append(data.audio.Reader(adjacentFile, dtype, lockdir))
+            #readers.append(adj)
             #for si in indices:
             #    pass
     logging.debug("%i spikes (by nspikes)" % nspikes)

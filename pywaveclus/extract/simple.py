@@ -17,9 +17,10 @@ def simple(readers, indices, ffunc, pre, post):
             continue # check length
         wave.append(data)
         del data
-        for reader in readers[1:]:
-            reader.seek(start)
-            wave.append(ffunc(reader.read_frames(length)))
+        #for reader in readers[1:]:
+        for reader_index in xrange(1,len(readers)):
+            readers[reader_index].seek(start)
+            wave.append(ffunc(readers[reader_index].read_frames(length)))
         waves.append(wave)
         del wave
     return waves
