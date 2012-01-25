@@ -26,7 +26,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, tmp = '
     outfile = "/".join((tempdir, "k_input.clu.1"))
     
     if featuretype == 'pca':
-        features = dsp.pca.features(waveforms, nfeatures)
+        features, pca_info = dsp.pca.features(waveforms, nfeatures)
     elif featuretype == 'ica':
         features = dsp.ica.features(waveforms, nfeatures)
     else:
@@ -73,5 +73,5 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, tmp = '
     
     # np.savetxt('features.txt',features)
     
-    return clusters, None
+    return clusters, pca_info
     

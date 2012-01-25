@@ -55,6 +55,9 @@ for i in xrange(len(times)-1):
         spiketable.row['clu'] = clusters[i]
         spiketable.row.append()
 
+clustering_info = hdfFile.createGroup('/', 'Clustering', 'Clustering info')
+for k, v in info.iteritems():
+    hdfFile.createArray(clustering_info, k, v)
 # spcgroup = hdfFile.createGroup('/', 'SPC', 'SPC results')
 # hdfFile.createArray(spcgroup,'cdata',cdata)
 # hdfFile.createArray(spcgroup,'ctree',ctree)

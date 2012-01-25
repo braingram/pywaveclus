@@ -10,6 +10,9 @@ from scikits.learn.decomposition.pca import PCA
 global FEATURES
 FEATURES = None
 
+def features_from_info(waveforms, info):
+    return np.dot((waveforms - info['mean']), info['components'].T)
+
 def features(waveforms, nfeatures = 3, usesaved = False):
     waves = []
     for wave in waveforms:
@@ -23,7 +26,18 @@ def features(waveforms, nfeatures = 3, usesaved = False):
         if FEATURES is None: load_features(nfeatures)
         return project_waveforms(waves)
     else:
-        return p.fit(waves).transform(waves)
+        p.fit(waves)
+        info = {}
+        info['mean'] = p.mean_
+        info['components'] = p.components_
+        return p.transform(waves), info
+        #return p.fit(waves).transform(waves)
+    # to 'save' the pca, store:
+    #   1) p.mean_
+    #   2) p.components_
+    # to 'transform' data:
+    #   dot((d - p.mean_), p.components_.T)
+    #
     # Td = p.fit(waveforms).transform(waveforms)
     # import matplotlib
     # matplotlib.use('MacOSX')
