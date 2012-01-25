@@ -10,16 +10,30 @@ from scikits.learn.decomposition.pca import PCA
 global FEATURES
 FEATURES = None
 
-def features_from_info(waveforms, info):
-    return np.dot((waveforms - info['mean']), info['components'].T)
-
-def features(waveforms, nfeatures = 3, usesaved = False):
+def stack_waveforms(waveforms):
+    """
+    convert waveforms (possibly [index, ch, form]) to
+    [index, stacked_form] where stacked_form contains
+    the waveform from all channels hstacked
+    """
     waves = []
     for wave in waveforms:
         wf = np.array([])
         for ch in wave: wf = np.hstack((wf, ch))
         waves.append(wf)
-    waves = np.array(waves)
+    return np.array(waves)
+
+def features_from_info(waveforms, info):
+    return np.dot((stack_waveforms(waveforms) - info['mean']), info['components'].T)
+
+def features(waveforms, nfeatures = 3, usesaved = False):
+    #waves = []
+    #for wave in waveforms:
+    #    wf = np.array([])
+    #    for ch in wave: wf = np.hstack((wf, ch))
+    #    waves.append(wf)
+    #waves = np.array(waves)
+    waves = stack_waveforms(waveforms)
     p = PCA(nfeatures)#, whiten=True)
     if usesaved:
         global FEATURES

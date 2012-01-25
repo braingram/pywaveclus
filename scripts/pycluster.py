@@ -93,14 +93,19 @@ pl.suptitle('Spike Times')
 pl.xlabel('Time(samples)')
 pl.ylabel('Amplitude')
 
-pl.figure(2, figsize=(nclusters*3,6))
+n_features = cfg.getint('cluster','nfeatures')
+
+pl.figure(2, figsize=(nclusters*3,n_features))
 pl.suptitle("Spike Waveforms")
 pl.ylabel("Amplitude")
 
-pl.figure(3)
+pl.figure(3, figsize=(n_features,n_features))
 pl.suptitle("Spike Features")
 
 logging.debug("Waveform array shape: %s" % str(waves.shape))
+
+# recompute features
+features = pywaveclus.dsp.pca.features_from_info(waves, info)
 
 for cl in xrange(nclusters):
     gi = np.where(clusters == cl)
@@ -130,6 +135,14 @@ for cl in xrange(nclusters):
         pl.plot(av, color=c)
     
     # plot features
+    pl.figure(3)
+    sf = features[gi,:]
+    ndims = sf.shape[1]
+    for x in xrange(ndims):
+        for y in xrange(ndims):
+            if y < x:
+                pl.subplot((ndims, ndims, x + y * ndims + 1))
+                pl.scatter(sf[:,x], sf[:,y], s = 1, label='%i', color=c)
 
 logging.debug("Saving plots")
 for (i,name) in enumerate(['times','waves','features']):
