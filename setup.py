@@ -44,7 +44,7 @@ setup(
                 'pywaveclus/detect','pywaveclus/dsp','pywaveclus/extract',\
                 'pywaveclus/process','pywaveclus/template'],
     package_data={'pywaveclus': ['bin/*']},
-    scripts=['scripts/pyc.py','scripts/pycluster.py'],
+    scripts=['scripts/pycluster.py'],
     version=get_version(),
 
     include_package_data=True,

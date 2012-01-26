@@ -17,9 +17,9 @@ def test_stack_waveforms():
     
     # check 2d
     assert(w2d.shape == f(w2d).shape) # check shapes
-    assert(all(f(w2d) == w2d)) # check values
+    assert(np.all(f(w2d) == w2d)) # check values
 
     # check 3d
     t3d = np.arange(x*y*z).reshape((x,y*z))
     assert(t3d.shape == f(w3d).shape) # check shapes
-    assert(all(t3d == f(w3d))) # check values
+    assert(np.all(t3d == f(w3d))) # check values
