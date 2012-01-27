@@ -106,6 +106,7 @@ logging.debug("Waveform array shape: %s" % str(waves.shape))
 
 # recompute features
 features = pywaveclus.dsp.pca.features_from_info(waves, info)
+logging.debug("Features array shape: %s" % str(features.shape))
 
 for cl in xrange(nclusters):
     gi = np.where(clusters == cl)
@@ -137,12 +138,21 @@ for cl in xrange(nclusters):
     # plot features
     pl.figure(3)
     sf = features[gi,:]
-    ndims = sf.shape[1]
+    ndims = int(sf.shape[1])
+    logging.debug("Feature Dims: %i, %s, %s" % (ndims, str(sf.shape), str(type(features))))
     for x in xrange(ndims):
         for y in xrange(ndims):
             if y < x:
-                pl.subplot((ndims, ndims, x + y * ndims + 1))
-                pl.scatter(sf[:,x], sf[:,y], s = 1, label='%i', color=c)
+                #spt = (ndims, ndims, x + y * ndims + 1)
+                pl.subplot(ndims, ndims, x + y * ndims + 1)
+                #logging.debug("Subplot tuple: %s" % str(spt))
+                #sys.stdout.flush()
+                #sys.stderr.flush()
+                #pl.subplot((ndims, ndims, x + y * ndims + 1))
+                #pl.subplot(*spt)
+                pl.scatter(sf[:,x], sf[:,y], s = 1, label='%i', color=c, alpha = 0.5)
+                pl.xticks([])
+                pl.yticks([])
 
 logging.debug("Saving plots")
 for (i,name) in enumerate(['times','waves','features']):
