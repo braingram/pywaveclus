@@ -33,9 +33,9 @@ post = cfg.getint('detect','post')
 nadj = len(cfg.get('main','adjacentfiles').split())
 
 class description(tables.IsDescription):
-    time = tables.Int32Col()
+    time = tables.Int64Col()
     wave = tables.Float64Col(shape=(pre + post))
-    clu = tables.Int8Col()
+    clu = tables.UInt8Col()
 
 hdfFile = tables.openFile(outfile,"w")
 spiketable = hdfFile.createTable("/","SpikeTable",description)
