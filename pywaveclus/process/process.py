@@ -117,12 +117,12 @@ def process_file(customCfg = None, options = None):
         logging.debug("0 spikes (by indices)")
     
     if waveforms is None:
-        return cfg, [], [], [], []
+        return cfg, [], [], [], {}
     elif len(waveforms) < cfg.getint('cluster','minspikes'):
         logging.warning("%i spikes less than minspikes [%i], assigning all to 1 cluster" % \
                 (len(waveforms), cfg.getint('cluster','minspikes')))
         clusters = np.array([1] * len(waveforms))
-        return cfg, indices, waveforms, clusters, None
+        return cfg, indices, waveforms, clusters, {}
     else:
         logging.debug("%i spikes before clustering" % len(indices))
         clusters, info = cfunc(waveforms)
