@@ -12,6 +12,37 @@ import numpy as np
 from .. import dsp
 from .. import utils
 
+def sort_clusters(clusters):
+    # # reorganize clusters
+    # what I want is a function that maps old to new cluster index
+    #   where f(1) is always 0, but f(>1) returns a number based on the # of spikes
+    min_cluster_i = clusters.min() # should be 1
+    if min_cluster_i == 0:
+        # Klustakwik should NOT return any spike with a cluster of 0
+        # the code is not setup for this case so throw an exception
+        raise ValueError("Klustakwik returned a cluster with index 0")
+    
+    max_cluster_i = clusters.max()
+    if min_cluster_i == max_cluster_i:
+        # only 1 cluster was found, just return the data without resorting
+        if min_cluster_i == 1:
+            return np.zeros_like(clusters) # all noise
+        else:
+            return np.ones_like(clusters) # all 1 signal
+    
+    # count non-noise (!= 1) clusters
+    cluster_counts = {}
+    for i in xrange(min_cluster_i, max_cluster_i + 1):
+        if i != 1:
+            cluster_counts[i] = len(clusters[clusters == i])
+
+    # sort by count (and add 1)
+    sorted_cluster_counts = [1] + sorted(cluster_counts, key = lambda k: cluster_counts[k])[::-1]
+    old_to_new_map = dict( zip( sorted_cluster_counts, \
+            map(sorted_cluster_counts.index, sorted_cluster_counts)))
+
+    return np.array(map(lambda c: old_to_new_map[c], clusters))
+
 def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, tmp = '/tmp', quiet = True):
     """
     method: klustakwik
@@ -64,14 +95,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, tmp = '
     
     shutil.rmtree(tempdir)
     
-    # # reorganize clusters
-    # logging.debug("Klustakwik found %i clusters" % nclusters)
-    # clusterList = []
-    # # cluster 1 is noise
-    # for i in xrange(1,nclusters+1): # klustakwik uses 1-based numbering
-    #     clusterList.append(np.where(clusters == i)[0])
-    
-    # np.savetxt('features.txt',features)
+    clusters = sort_clusters(clusters)
     
     return clusters, pca_info
     
