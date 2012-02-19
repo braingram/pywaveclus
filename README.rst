@@ -79,3 +79,14 @@ The hdf5 file contains a main table SpikeTable that contains a row for each spik
 - time : time of the spike (in samples/frames)
 - wave : waveform of the spike
 - clu  : cluster to which the spike belongs (cluster 0 is unmatched)
+
+Notes
+-----
+
+Building scikits.audiolab on ubuntu:
+
+- sudo apt-get install libsndfile1-dev
+- git clone https://github.com/cournape/audiolab.git
+- cd audiolab
+- echo -e "[sndfile]\ninclude_dirs = /usr/include\nlibrary_dirs = /usr/lib32\nsndfile_libs = sndfile" > site.cfg
+- pip install .
