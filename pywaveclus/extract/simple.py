@@ -2,6 +2,7 @@
 
 #from .. import utils
 
+
 def simple(readers, indices, ffunc, pre, post):
     #find_extreme = utils.find_extreme(direction)
     waves = []
@@ -12,13 +13,13 @@ def simple(readers, indices, ffunc, pre, post):
         length = pre + post
         main.seek(start)
         data = ffunc(main.read_frames(length))
-        if len(data) != pre+post:
+        if len(data) != pre + post:
             del data
-            continue # check length
+            continue  # check length
         wave.append(data)
         del data
         #for reader in readers[1:]:
-        for reader_index in xrange(1,len(readers)):
+        for reader_index in xrange(1, len(readers)):
             readers[reader_index].seek(start)
             wave.append(ffunc(readers[reader_index].read_frames(length)))
         waves.append(wave)

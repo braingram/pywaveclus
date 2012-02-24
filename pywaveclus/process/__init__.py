@@ -3,4 +3,4 @@
 import config
 import process
 
-__all__ = ['config','process']
+__all__ = ['config', 'process']
