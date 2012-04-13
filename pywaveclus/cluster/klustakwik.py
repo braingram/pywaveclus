@@ -48,13 +48,53 @@ def sort_clusters(clusters):
 
 
 def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
-        tmp='/tmp', quiet=True):
+        separate, pre, tmp='/tmp', quiet=True):
     """
     method: klustakwik
     nfeatures: 3
     minclusters: 3
     maxclusters: 5
     """
+    if separate:
+        # separate waveforms into + and -, cluster separately
+        waveforms = np.array(waveforms)
+        if waveforms.ndim == 3:
+            signs = np.sign(waveforms[:, 0, pre])
+        elif waveforms.ndim == 2:
+            signs = np.sign(waveforms[:, pre])
+        else:
+            raise ValueError("Invalid waveforms dimensions: %s" % \
+                    waveforms.shape)
+
+        pinds = np.where(signs == 1)[0]
+        ninds = np.where(signs == -1)[0]
+
+        # if no + or no -, just cluster the other
+        if (len(pinds) == 0) or (len(ninds) == 0):
+            return cluster(waveforms, nfeatures, featuretype, minclusters, \
+                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+
+        pwaves = waveforms[pinds]
+        nwaves = waveforms[ninds]
+
+        pc, pi = cluster(pwaves, nfeatures, featuretype, minclusters, \
+                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+        nc, ni = cluster(nwaves, nfeatures, featuretype, minclusters, \
+                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+
+        info = dict([('p' + k, v) for k, v in pi.iteritems()])
+        info.update(dict([('n' + k, v) for k, v in ni.iteritems()]))
+
+        clusters = np.zeros(len(pc) + len(nc), dtype=pc.dtype)
+        # merge cluster 0 from each
+        # interleave other clusters
+        pc *= 2  # keeps 0 -> 0
+        nc = nc * 2 - 1  # makes 0 -> -1
+        ti = nc > 0
+        clusters[pinds] = pc
+        clusters[ninds[ti]] = nc[ti]
+
+        return clusters, info
 
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 

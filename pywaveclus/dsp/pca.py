@@ -26,9 +26,33 @@ def stack_waveforms(waveforms):
     return np.array(waves)
 
 
-def features_from_info(waveforms, info):
-    return np.dot((stack_waveforms(waveforms) - info['mean']), \
-            info['components'].T)
+def reconstruct_features(waveforms, mean, components):
+    return np.dot((stack_waveforms(waveforms) - mean), \
+            components.T)
+
+
+def features_from_info(waveforms, info, pre):
+    if 'mean' in info:
+        return reconstruct_features(waveforms, info['mean'], \
+                info['components'])
+    elif 'nmean' in info:
+        # separated spikes
+        signs = np.sign(waveforms[:, 0, pre])
+
+        pi = np.where(signs == 1)[0]
+        ni = np.where(signs == -1)[0]
+
+        pf = reconstruct_features(waveforms[pi], info['pmean'], \
+                info['pcomponents'])
+        nf = reconstruct_features(waveforms[ni], info['nmean'], \
+                info['ncomponents'])
+
+        f = np.zeros((pf.shape[0] + nf.shape[0], pf.shape[1]), dtype=pf.dtype)
+        f[pi] = pf
+        f[ni] = nf
+        return f
+    else:
+        raise ValueError("Invalid info: %s" % info)
 
 
 def features(waveforms, nfeatures=3, usesaved=False):

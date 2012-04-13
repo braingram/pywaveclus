@@ -27,8 +27,14 @@ def cluster_from_config(cfg):
         minclusters = cfg.getint('cluster', 'minclusters')
         maxclusters = cfg.getint('cluster', 'maxclusters')
         ftype = cfg.get('cluster', 'featuretype')
+        separate = cfg.get('cluster', 'separate')
+        pre = cfg.getint('detect', 'pre')
+        if separate == 'peak':
+            separate = True
+        else:
+            separate = False
 
         return lambda x: klustakwik.cluster(x, nfeatures, ftype, \
-                minclusters, maxclusters)
+                minclusters, maxclusters, separate, pre)
     else:
         raise ValueError("Unknown cluster method: %s" % method)

@@ -61,6 +61,7 @@ featuretype: pca
 minclusters: 3
 maxclusters: 5
 minspikes: 12
+separate: peak
 
 [template]
 method: none
