@@ -13,6 +13,17 @@ from .. import dsp
 from .. import utils
 
 
+def remove_empty(clusters):
+    # skip cluster 0
+    nzc = np.unique(clusters)
+    nzc = nzc[nzc > 0]
+    offset = nzc - np.arange(1, 1 + len(nzc))
+    for (c, o) in zip(nzc, offset):
+        if o != 0:
+            clusters[clusters == c] -= o
+    return clusters
+
+
 def sort_clusters(clusters):
     # # reorganize clusters
     # what I want is a function that maps old to new cluster index
@@ -94,7 +105,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         clusters[pinds] = pc
         clusters[ninds[ti]] = nc[ti]
 
-        return clusters, info
+        return remove_empty(clusters), info
 
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 
@@ -125,8 +136,8 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     # make file executable
     os.chmod(exefile, stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | \
             stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
-    cmd = './klustakwik_%s k_input 1 -UseFeatures %s -MinClusters %i " \
-            "-MaxClusters %i -Screen 0' %\
+    cmd = './klustakwik_%s k_input 1 -UseFeatures %s -MinClusters %i ' \
+            '-MaxClusters %i -Screen 0' %\
             (utils.get_os(), '1' * nfeatures, minclusters, maxclusters)
     logging.debug("Running klustakwik: %s" % cmd)
     if quiet:

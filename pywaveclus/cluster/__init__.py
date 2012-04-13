@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import klustakwik
+import skl
 import spc
 
 from .. import dsp
 
-__all__ = ['klustakwik', 'spc']
+__all__ = ['klustakwik', 'skl', 'spc']
 
 
 def cluster_from_config(cfg):
@@ -36,5 +37,18 @@ def cluster_from_config(cfg):
 
         return lambda x: klustakwik.cluster(x, nfeatures, ftype, \
                 minclusters, maxclusters, separate, pre)
+    elif method == 'kmeans':
+        nfeatures = cfg.getint('cluster', 'nfeatures')
+        ftype = cfg.get('cluster', 'featuretype')
+        nclusters = cfg.getint('cluster', 'nclusters')
+        separate = cfg.get('cluster', 'separate')
+        pre = cfg.getint('detect', 'pre')
+        if separate == 'peak':
+            separate = True
+        else:
+            separate = False
+        return lambda x: skl.cluster(x, nfeatures, ftype, nclusters, \
+                separate, pre)
+
     else:
         raise ValueError("Unknown cluster method: %s" % method)
