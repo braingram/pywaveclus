@@ -9,14 +9,16 @@ import raw
 
 __all__ = ['audio', 'raw']
 
+
 def reader_from_config(cfg):
-    filename = cfg.get('main','filename')
+    filename = cfg.get('main', 'filename')
     ext = os.path.splitext(filename)[1].lower()
     if ext == '.wav':
-        dtype = np.dtype(cfg.get('reader','dtype'))
-        lockdir = cfg.get('reader','lockdir')
-        if lockdir.strip() == '': lockdir = None
-        reference = cfg.get('main','reference')
+        dtype = np.dtype(cfg.get('reader', 'dtype'))
+        lockdir = cfg.get('reader', 'lockdir')
+        if lockdir.strip() == '':
+            lockdir = None
+        reference = cfg.get('main', 'reference')
         if reference.strip() != '':
             return audio.ReferencedReader(filename, reference, dtype, lockdir)
         else:

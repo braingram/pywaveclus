@@ -10,6 +10,7 @@ from scikits.learn.decomposition.pca import PCA
 global FEATURES
 FEATURES = None
 
+
 def stack_waveforms(waveforms):
     """
     convert waveforms (possibly [index, ch, form]) to
@@ -19,14 +20,18 @@ def stack_waveforms(waveforms):
     waves = []
     for wave in waveforms:
         wf = np.array([])
-        for ch in wave: wf = np.hstack((wf, ch))
+        for ch in wave:
+            wf = np.hstack((wf, ch))
         waves.append(wf)
     return np.array(waves)
 
-def features_from_info(waveforms, info):
-    return np.dot((stack_waveforms(waveforms) - info['mean']), info['components'].T)
 
-def features(waveforms, nfeatures = 3, usesaved = False):
+def features_from_info(waveforms, info):
+    return np.dot((stack_waveforms(waveforms) - info['mean']), \
+            info['components'].T)
+
+
+def features(waveforms, nfeatures=3, usesaved=False):
     #waves = []
     #for wave in waveforms:
     #    wf = np.array([])
@@ -34,10 +39,11 @@ def features(waveforms, nfeatures = 3, usesaved = False):
     #    waves.append(wf)
     #waves = np.array(waves)
     waves = stack_waveforms(waveforms)
-    p = PCA(nfeatures)#, whiten=True)
+    p = PCA(nfeatures)  # , whiten=True)
     if usesaved:
         global FEATURES
-        if FEATURES is None: load_features(nfeatures)
+        if FEATURES is None:
+            load_features(nfeatures)
         return project_waveforms(waves)
     else:
         p.fit(waves)
@@ -61,17 +67,24 @@ def features(waveforms, nfeatures = 3, usesaved = False):
     # pl.savefig('pca.png')
     # return Td
 
+
 def load_features(nfeatures):
-    ffilename = os.path.dirname(os.path.abspath(__file__)) + '/../bin/features.txt'
-    tfilename = os.path.dirname(os.path.abspath(__file__)) + '/../bin/timeseries.txt'
+    ffilename = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../bin/features.txt'
+    tfilename = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../bin/timeseries.txt'
     features = np.loadtxt(ffilename)
     ts = np.loadtxt(tfilename)
     global FEATURES
-    FEATURES = np.array([np.interp(np.arange(-40,88,dtype=np.float64)/44100.,ts,fs) for fs in features]).astype(np.float64)[:nfeatures]
+    FEATURES = np.array([np.interp(np.arange(-40, 88, dtype=np.float64) \
+            / 44100., ts, fs) for fs in features])\
+            .astype(np.float64)[:nfeatures]
+
 
 def project_waveform(waveform):
     global FEATURES
     return 100 * np.dot(FEATURES, waveform).T
+
 
 def project_waveforms(waveforms):
     return np.array([project_waveform(w) for w in waveforms])

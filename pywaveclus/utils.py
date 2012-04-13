@@ -9,10 +9,11 @@ import sys
 import numpy as np
 import scipy.stats
 
+
 def get_os():
     """
     Attempt to determine the operating system
-    
+
     Returns
     -------
     systype : string
@@ -28,9 +29,11 @@ def get_os():
         # 'cygwin', 'os2', 'os2emx', 'riscos', 'atheos'
         raise ValueError("Unknown operating system: %s" % sys.platform)
 
+
 def ks(coeffs):
     """
-    A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution to norm
+    A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution
+    to norm
 
     Parameters
     ----------
@@ -42,35 +45,40 @@ def ks(coeffs):
     d : float
         D statistic from Kolmogorov-Smirnov test
     """
-    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs,ddof=1),'norm')
+    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs, ddof=1), 'norm')
     return d
+
 
 def chunk(n, chunksize, overlap=0):
     """
     Chunk generator
     """
-    for i in xrange((n/chunksize)+1):
+    for i in xrange((n / chunksize) + 1):
         if (i * chunksize) >= n:
             return
-        if ((i+1) * chunksize + overlap) < n:
-            yield (i*chunksize, (i+1)*chunksize + overlap)
+        if ((i + 1) * chunksize + overlap) < n:
+            yield (i * chunksize, (i + 1) * chunksize + overlap)
         else:
-            yield (i*chunksize, n)
+            yield (i * chunksize, n)
+
 
 def error(string, exception=Exception):
     logging.error(string)
-    raise exception, string
+    raise exception(string)
+
 
 @contextlib.contextmanager
 def waiting_lock_dir(lock_dir, delay=1):
     while os.path.exists(lock_dir):
-        logging.info("Found lock directory, waiting to recheck in %d..." % delay)
+        logging.info("Found lock directory, waiting to recheck in %d..." % \
+                delay)
         time.sleep(delay)
-    f = os.makedirs(lock_dir)
+    os.makedirs(lock_dir)
     try:
         yield
     finally:
         os.rmdir(lock_dir)
+
 
 def parse_time_range(timerange, minVal, maxVal, toVal=int):
     if timerange.strip() == '':
@@ -83,7 +91,7 @@ def parse_time_range(timerange, minVal, maxVal, toVal=int):
     else:
         start = str(minVal)
         end = timerange
-    
+
     try:
         startVal = toVal(start)
     except Exception as E:
@@ -92,8 +100,9 @@ def parse_time_range(timerange, minVal, maxVal, toVal=int):
         endVal = toVal(end)
     except Exception as E:
         raise ValueError("Count not convert %s to %s: %s" % (end, toVal, E))
-    
-    return max(startVal,minVal), min(endVal, maxVal)
+
+    return max(startVal, minVal), min(endVal, maxVal)
+
 
 def find_extreme(direction):
     if direction == 'pos':

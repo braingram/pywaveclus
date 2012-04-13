@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import logging
+#import logging
 
 import numpy as np
 
-def match(traces, clusters, method = 'center', **kwargs):
+
+def match(traces, clusters, method='center', **kwargs):
     """
     Parameters
     ----------
@@ -17,14 +18,14 @@ def match(traces, clusters, method = 'center', **kwargs):
         One of: nn center ml mahal
     kwargs
         Arguments that will be passed on to the matching method
-    
+
     Returns
     -------
     clusters : list of 1d array of int
         Clusters with rematched cluster 0
     """
     if method == 'nn':
-        matches =  nn(traces, clusters, **kwargs)
+        matches = nn(traces, clusters, **kwargs)
     elif method == 'center':
         matches = center(traces, clusters, **kwargs)
     elif method == 'ml':
@@ -33,17 +34,20 @@ def match(traces, clusters, method = 'center', **kwargs):
         matches = mahal(traces, clusters)
     else:
         raise ValueError("Unknown template match method %s" % method)
-    
+
     # construct new cluster from matches
     unmatchedindices = list(clusters[0])[:]
     clusters[0] = []
-    clusters = [list(c) for c in clusters] # convert to lists for easy appending
+    # convert to lists for easy appending
+    clusters = [list(c) for c in clusters]
     for i, m in zip(unmatchedindices, matches):
         clusters[m].append(i)
-    clusters = [np.array(c,dtype=int) for c in clusters] # convert back to 2d array
+    # convert back to 2d array
+    clusters = [np.array(c, dtype=int) for c in clusters]
     return clusters
 
-def nearestneighbor(x, vectors, maxdist, k = 1):
+
+def nearestneighbor(x, vectors, maxdist, k=1):
     """
     Parameters
     ----------
@@ -55,28 +59,32 @@ def nearestneighbor(x, vectors, maxdist, k = 1):
         Maximum euclidean distance of neighbors
     k : int
         Return up to k nearest neighbors
-    
+
     Returns
     -------
     nearest : 1d array of int
         Up to k nearest neighbors
         May return empty array, or <k array
-    
+
     Notes
     -----
     """
     assert maxdist >= 0., "maxdist [%s] must be >= 0" % maxdist
     # vectors = np.atleast_2d(vectors)
-    assert vectors.shape[1] == len(x), "vectors.shape[1] = %i must == len(x) [%i]" % (vectors.shape[1], len(x))
+    assert vectors.shape[1] == len(x), \
+            "vectors.shape[1] = %i must == len(x) [%i]" % \
+            (vectors.shape[1], len(x))
     assert k > 0, "k[%i] must be > 0" % k
-    dists = np.sum((vectors - x )**2,1)**0.5
+    dists = np.sum((vectors - x) ** 2, 1) ** 0.5
     conforming = np.where(dists < maxdist)[0]
-    # in WaveClus: pointdist and pointlimit are always inf, and have no effect, so skipping...
+    # in WaveClus: pointdist and pointlimit are
+    # always inf, and have no effect, so skipping...
     if len(conforming) == 0:
-        return np.array([],dtype=int)
+        return np.array([], dtype=int)
     return conforming[np.argsort(dists[conforming])][:k]
 
-def nn(traces, clusters, nsd = 3, k = 10, kmin = 10):
+
+def nn(traces, clusters, nsd=3, k=10, kmin=10):
     """
     Parameters
     ----------
@@ -90,33 +98,37 @@ def nn(traces, clusters, nsd = 3, k = 10, kmin = 10):
         Number of nearest neighbors to consider
     kmin : int
         Minimum neighbors required for match
-    
+
     Returns
     -------
     clusters : list of 1d array of int
         see match
     """
-    sd = np.sqrt(np.sum(np.var(traces,1,ddof=1)))*nsd
+    sd = np.sqrt(np.sum(np.var(traces, 1, ddof=1))) * nsd
     goodspikes = np.hstack(clusters[1:])
-    votes = np.hstack([np.ones(len(c),dtype=int)*(i+1) for (i,c) in enumerate(clusters[1:])])
+    votes = np.hstack([np.ones(len(c), dtype=int) * (i + 1) for \
+            (i, c) in enumerate(clusters[1:])])
     matches = []
     for i in clusters[0]:
         # print traces[i], goodspikes, traces[goodspikes], sd, k
-        nn = nearestneighbor(traces[i],traces[goodspikes],sd,k)
+        nn = nearestneighbor(traces[i], traces[goodspikes], sd, k)
         # print nn, traces[i], traces[goodspikes], sd, k
         if len(nn) == 0:
             matches.append(0)
             continue
         # vote
-        cvotes = [sum(votes[nn] == i) for i in xrange(1,len(clusters))] # how many points, from what clusters
+        # how many points, from what clusters
+        cvotes = [sum(votes[nn] == i) for i in xrange(1, len(clusters))]
         # print cvotes, kmin
         if max(cvotes) < kmin:
             matches.append(0)
             continue
-        matches.append(cvotes.index(max(cvotes))+1) # cluster w/most neighbors
+        # cluster w/most neighbors
+        matches.append(cvotes.index(max(cvotes)) + 1)
     return matches
 
-def center(traces, clusters, nsd = 3):
+
+def center(traces, clusters, nsd=3):
     """
     Parameters
     ----------
@@ -126,7 +138,7 @@ def center(traces, clusters, nsd = 3):
         see match
     nsd : float
         Number of std-dev used to calculate max neighbor distance
-    
+
     Returns
     -------
     clusters : list of 1d array of int
@@ -134,10 +146,11 @@ def center(traces, clusters, nsd = 3):
     """
     sds = []
     centers = []
-    for i in xrange(1,len(clusters)):
+    for i in xrange(1, len(clusters)):
         ctraces = traces[clusters[i]]
-        centers.append(np.mean(ctraces,0))
-        sds.append(np.sqrt(np.sum(np.var(ctraces,1))) * nsd) # should be over N not N-1 as per WaveClus
+        centers.append(np.mean(ctraces, 0))
+        # should be over N not N-1 as per WaveClus
+        sds.append(np.sqrt(np.sum(np.var(ctraces, 1))) * nsd)
     centers = np.array(centers)
     matches = []
     for i in clusters[0]:
@@ -145,10 +158,10 @@ def center(traces, clusters, nsd = 3):
         if len(n) == 0:
             matches.append(0)
         else:
-            matches.append(n[0]+1)
+            matches.append(n[0] + 1)
     return matches
 
-# 
+
 # def ml(traces, clusters):
 #     """
 #     Parameters
@@ -218,11 +231,3 @@ def center(traces, clusters, nsd = 3):
 #         [m index] = min(d);
 #     end
 #     pass
-
-if __name__ == '__main__':
-    test_nearestneighbor()
-    test_nn()
-    test_match()
-    test_center()
-    # test_ml()
-    # test_mahal()
