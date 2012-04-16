@@ -80,7 +80,59 @@ def waiting_lock_dir(lock_dir, delay=1):
         os.rmdir(lock_dir)
 
 
-def parse_time_range(timerange, minVal, maxVal, toVal=int):
+def parse_value(string, default, tmin, tmax, ttype):
+    if string.strip() == '':
+        return ttype(default)
+
+    if '.' in string:
+        return ttype(float(string) * tmax)
+
+    if '+' in string:
+        return ttype(string) + tmin
+
+    if '-' in string:
+        return tmax + ttype(string)
+
+    return ttype(string)
+
+
+def parse_time_range(timerange, tmin, tmax, ttype=int):
+    """
+    possible time ranges:
+        '' -> min, max
+        '1' -> min, 1
+        '1:' -> 1, max
+        ':1' -> min, 1
+        '0.5:' -> .5 * max, max
+        ':0.5' -> min, .5 * max
+        ':+1' -> min, min + 1
+        '-10:' -> max - 10, max
+        ':-10' -> min, max - 10
+    """
+    # '' -> min, max
+    if timerange.strip() == '':
+        return ttype(tmin), ttype(tmax)
+
+    # '1' -> min, 1
+    if ':' in timerange:
+        start, end = timerange.split(':')
+    else:
+        start, end = '', timerange
+
+    start = parse_value(start, tmin, tmin, tmax, ttype)
+    # passing in start rather than tmin allows '+1' to be relative to start
+    end = parse_value(end, tmax, start, tmax, ttype)
+
+    start = max(start, tmin)
+    end = min(end, tmax)
+
+    if start >= end:
+        raise ValueError("time range start >= end: %s [%i:%i]" % \
+                (timerange, start, end))
+    return start, end
+
+
+def old_parse_time_range(timerange, minVal, maxVal, toVal=int):
     if timerange.strip() == '':
         return minVal, maxVal
     elif ':' in timerange:
