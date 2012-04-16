@@ -137,7 +137,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     os.chmod(exefile, stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | \
             stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     cmd = './klustakwik_%s k_input 1 -UseFeatures %s -MinClusters %i ' \
-            '-MaxClusters %i -Screen 0' %\
+            '-MaxClusters %i -Screen 0 -Log 0' %\
             (utils.get_os(), '1' * nfeatures, minclusters, maxclusters)
     logging.debug("Running klustakwik: %s" % cmd)
     if quiet:
