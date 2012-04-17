@@ -154,7 +154,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     #with open(outfile, 'r') as outfile:
     #    nclusters = int(outfile.readline())
 
-    np.save("features_%i" % len(features), features)
+    #np.save("features_%i" % len(features), features)
 
     shutil.rmtree(tempdir)
 
