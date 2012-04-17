@@ -89,9 +89,9 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         nwaves = waveforms[ninds]
 
         pc, pi = cluster(pwaves, nfeatures, featuretype, minclusters, \
-                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+                maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
         nc, ni = cluster(nwaves, nfeatures, featuretype, minclusters, \
-                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+                maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
 
         info = dict([('p' + k, v) for k, v in pi.iteritems()])
         info.update(dict([('n' + k, v) for k, v in ni.iteritems()]))
@@ -153,6 +153,8 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     clusters = np.loadtxt(outfile, dtype=np.int32, skiprows=1)
     #with open(outfile, 'r') as outfile:
     #    nclusters = int(outfile.readline())
+
+    np.save("features_%i" % len(features), features)
 
     shutil.rmtree(tempdir)
 

@@ -97,8 +97,6 @@ def cluster(waveforms, nfeatures, featuretype, nclusters, \
 def gmm(waveforms, nfeatures, ftype, nclusters, separate, pre, minspikes, \
         cvtype):
     raise NotImplementedError("Not yet implemented")
-    if separate:
-
     if len(waveforms) < minspikes:
         return np.zeros(len(waveforms)), {}
     g = scikits.learn.mixture.GMM(nclusters, cvtype)
