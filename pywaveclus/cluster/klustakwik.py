@@ -105,10 +105,10 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         clusters[pinds] = pc
         clusters[ninds[ti]] = nc[ti]
 
-        return remove_empty(clusters), info
+        return remove_empty(clusters), {}
 
     if len(waveforms) < minspikes:
-        return np.zeros(len(waveforms))
+        return np.zeros(len(waveforms)), {}
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 
     datafile = "/".join((tempdir, "k_input.fet.1"))

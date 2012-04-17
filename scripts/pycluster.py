@@ -111,7 +111,10 @@ pl.suptitle("Spike Features")
 logging.debug("Waveform array shape: %s" % str(waves.shape))
 
 # recompute features
-features = pywaveclus.dsp.pca.features_from_info(waves, info, pre)
+if info == {}:
+    features = pl.zeros((len(times), n_features))
+else:
+    features = pywaveclus.dsp.pca.features_from_info(waves, info, pre)
 logging.debug("Features array shape: %s" % str(features.shape))
 
 for cl in xrange(nclusters):
