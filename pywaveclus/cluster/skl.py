@@ -3,6 +3,7 @@
 
 import numpy as np
 import scikits.learn.cluster
+import scikits.learn.mixture
 
 from .. import dsp
 
@@ -72,7 +73,7 @@ def cluster(waveforms, nfeatures, featuretype, nclusters, \
         return remove_empty(clusters), info
 
     if len(waveforms) < minspikes:
-        return np.zeros(len(waveforms))
+        return np.zeros(len(waveforms)), {}
 
     if featuretype == 'pca':
         features, pca_info = dsp.pca.features(waveforms, nfeatures)
@@ -91,3 +92,16 @@ def cluster(waveforms, nfeatures, featuretype, nclusters, \
     clusters = sort_clusters(clusters)
 
     return clusters, pca_info
+
+
+def gmm(waveforms, nfeatures, ftype, nclusters, separate, pre, minspikes, \
+        cvtype):
+    raise NotImplementedError("Not yet implemented")
+    if separate:
+
+    if len(waveforms) < minspikes:
+        return np.zeros(len(waveforms)), {}
+    g = scikits.learn.mixture.GMM(nclusters, cvtype)
+    if featuretype == 'pca':
+        features, pca_info = dsp.pca.features(waveforms, nfeatures)
+    pass

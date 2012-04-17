@@ -52,6 +52,20 @@ def cluster_from_config(cfg):
             separate = False
         return lambda x: skl.cluster(x, nfeatures, ftype, nclusters, \
                 separate, pre, minspikes)
+    elif method == 'gmm':
+        nfeatures = cfg.getint('cluster', 'nfeatures')
+        ftype = cfg.get('cluster', 'featuretype')
+        nclusters = cfg.getint('cluster', 'nclusters')
+        separate = cfg.get('cluster', 'separate')
+        pre = cfg.getint('detect', 'pre')
+        minspikes = cfg.getint('cluster', 'minspikes')
+        cvtype = cfg.get('cluster', 'cvtype')
+        if separate == 'peak':
+            separate = True
+        else:
+            separate = False
+        return lambda x: skl.gmm(x, nfeatures, ftype, nclusters, \
+                separate, pre, minspikes, cvtype)
 
     else:
         raise ValueError("Unknown cluster method: %s" % method)
