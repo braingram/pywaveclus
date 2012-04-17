@@ -140,7 +140,7 @@ def process_file(customCfg=None, options=None):
         logging.warning("%i spikes less than minspikes [%i], " \
                 "assigning all to 1 cluster" % \
                 (len(waveforms), cfg.getint('cluster', 'minspikes')))
-        clusters = np.array([1] * len(waveforms))
+        clusters = np.array([0] * len(waveforms))
         return cfg, indices, waveforms, clusters, {}
     else:
         logging.debug("%i spikes before clustering" % len(indices))

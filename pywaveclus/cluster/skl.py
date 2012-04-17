@@ -27,7 +27,7 @@ def sort_clusters(clusters):
 
 
 def cluster(waveforms, nfeatures, featuretype, nclusters, \
-        separate, pre, tmp='/tmp', quiet=True):
+        separate, pre, minspikes, tmp='/tmp', quiet=True):
     """
     """
     if separate:
@@ -70,6 +70,9 @@ def cluster(waveforms, nfeatures, featuretype, nclusters, \
         clusters[ninds[ti]] = nc[ti]
 
         return remove_empty(clusters), info
+
+    if len(waveforms) < minspikes:
+        return np.zeros(len(waveforms))
 
     if featuretype == 'pca':
         features, pca_info = dsp.pca.features(waveforms, nfeatures)

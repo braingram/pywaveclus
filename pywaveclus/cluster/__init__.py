@@ -19,6 +19,7 @@ def cluster_from_config(cfg):
         wtype = cfg.get('cluster', 'wavelet')
         nclusters = cfg.getint('cluster', 'nclusters')
         nnoise = cfg.getint('cluster', 'nnoise')
+        minspikes = cfg.getint('cluster', 'minspikes')
 
         return lambda x: spc.cluster(dsp.wavelet.features(x, nfeatures, \
                 levels, wavelet=wtype), nclusters=nclusters, \
@@ -30,25 +31,27 @@ def cluster_from_config(cfg):
         ftype = cfg.get('cluster', 'featuretype')
         separate = cfg.get('cluster', 'separate')
         pre = cfg.getint('detect', 'pre')
+        minspikes = cfg.getint('cluster', 'minspikes')
         if separate == 'peak':
             separate = True
         else:
             separate = False
 
         return lambda x: klustakwik.cluster(x, nfeatures, ftype, \
-                minclusters, maxclusters, separate, pre)
+                minclusters, maxclusters, separate, pre, minspikes)
     elif method == 'kmeans':
         nfeatures = cfg.getint('cluster', 'nfeatures')
         ftype = cfg.get('cluster', 'featuretype')
         nclusters = cfg.getint('cluster', 'nclusters')
         separate = cfg.get('cluster', 'separate')
         pre = cfg.getint('detect', 'pre')
+        minspikes = cfg.getint('cluster', 'minspikes')
         if separate == 'peak':
             separate = True
         else:
             separate = False
         return lambda x: skl.cluster(x, nfeatures, ftype, nclusters, \
-                separate, pre)
+                separate, pre, minspikes)
 
     else:
         raise ValueError("Unknown cluster method: %s" % method)

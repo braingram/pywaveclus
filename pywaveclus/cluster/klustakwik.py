@@ -59,7 +59,7 @@ def sort_clusters(clusters):
 
 
 def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
-        separate, pre, tmp='/tmp', quiet=True):
+        separate, pre, minspikes, tmp='/tmp', quiet=True):
     """
     method: klustakwik
     nfeatures: 3
@@ -107,6 +107,8 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
         return remove_empty(clusters), info
 
+    if len(waveforms) < minspikes:
+        return np.zeros(len(waveforms))
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 
     datafile = "/".join((tempdir, "k_input.fet.1"))
