@@ -117,7 +117,7 @@ else:
     features = pywaveclus.dsp.pca.features_from_info(waves, info, pre)
 logging.debug("Features array shape: %s" % str(features.shape))
 
-for cl in xrange(nclusters):
+for cl in xrange(int(nclusters)):
     gi = np.where(clusters == cl)
     if (len(gi) == 0):
         continue
