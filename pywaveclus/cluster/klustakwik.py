@@ -105,7 +105,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         clusters[pinds] = pc
         clusters[ninds[ti]] = nc[ti]
 
-        return remove_empty(clusters), {}
+        return remove_empty(clusters), info
 
     if len(waveforms) < minspikes:
         return np.zeros(len(waveforms)), {}
