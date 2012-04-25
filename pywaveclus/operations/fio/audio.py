@@ -55,8 +55,8 @@ class ICAReader(Reader):
         self.mixing_matrix = numpy.matrix(numpy.loadtxt(mixing_matrix_fn))
         self.unmixing_matrix_fn = unmixing_matrix_fn
         self.unmixing_matrix = numpy.matrix(numpy.loadtxt(unmixing_matrix_fn))
+        # pre-mulitply the unmixing and mixing matrices
+        self.M = self.mixing_matrix * self.unmixing_matrix
 
     def read_frames(self, start, nframes):
-        # TODO can I just multiply the matrices once?
-        return self.mixing_matrix * self.unmixing_matrix * \
-                Reader.read_frames(self, start, nframes)
+        return numpy.array(self.M * Reader.read_frames(self, start, nframes))
