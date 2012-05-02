@@ -1,62 +1,61 @@
 #!/usr/bin/env python
 
+import os
 import re
-import warnings
+#import warnings
 
-import numpy
+#import numpy
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import scikits.audiolab
+#with warnings.catch_warnings():
+#    warnings.simplefilter("ignore")
+#    import scikits.audiolab
 
 from ... import probe
 #from ... import utils
 
+import icapp
+
 
 def position_sorted(fns, ptype, indexre):
-    to_pos = probe.lookup_converter_function(ptype, 'audio', 'pos')
+    to_pos = probe.lookup_converter_function(ptype, 'tdt', 'pos')
     return sorted(fns, key=lambda fn: \
-            to_pos(int(re.match(indexre, fn).groups()[0])))
+            to_pos(int(re.findall(indexre, os.path.basename(fn))[0])))
 
 
-class Reader(object):
-    def __init__(self, filenames=None, probetype='nna', dtype=numpy.float64, \
-            indexre=r'[a-z,A-Z]+_([0-9]+)\#*'):
-        assert filenames != None, "No filenames supplied to reader"
-        self.dtype = dtype
+class Reader(icapp.fio.MultiAudioFile):
+    def __init__(self, filenames=None, probetype='nna', \
+            indexre=r'_([0-9]+)\#*', chunksize=441000, **kwargs):
+        assert filenames is not None, "No filenames supplied to reader"
+        # position sort filenames and create a the multiaudiofile
+        icapp.fio.MultiAudioFile.__init__(self, \
+                position_sorted(list(filenames), probetype, indexre), **kwargs)
         self.probetype = probetype
-        self.filenames = position_sorted(list(filenames), probetype, indexre)
-        self.files = [scikits.audiolab.Sndfile(fn) for fn in filenames]
+        self.chunksize = chunksize
 
         # store channel index scheme conversion functions
-        self.audio_to_pos = probe.lookup_converter_function(probetype, \
-                'audio', 'pos')
-        self.pos_to_audio = probe.lookup_converter_function(probetype, \
-                'pos', 'audio')
+        self.tdt_to_pos = probe.lookup_converter_function(probetype, \
+                'tdt', 'pos')
+        self.pos_to_tdt = probe.lookup_converter_function(probetype, \
+                'pos', 'tdt')
 
-    def read_frames(self, start, nframes):
-        """
-        Read all channels
-        """
-        [f.seek(start) for f in self.filenames]
-        return numpy.vstack([f.read_frames(nframes, self.dtype) \
-                for f in self.filenames])
+    def seek_and_read(self, start, n):
+        self.seek(start)
+        return self.read(n)
 
 
 class ICAReader(Reader):
-    def __init__(self, mixing_matrix_fn=None, unmixing_matrix_fn=None, \
-            **kwargs):
-        assert mixing_matrix_fn is not None, \
-                "No mixing matrix filename supplied"
-        assert unmixing_matrix_fn is not None, \
-                "No unmixing matrix filename supplied"
+    def __init__(self, icafilename=None, icakwargs=None, **kwargs):
+        assert icafilename is not None, "No ica file supplied"
+        assert icakwargs is not None, "No ica kwargs supplied"
         Reader.__init__(self, **kwargs)
-        self.mixing_matrix_fn = mixing_matrix_fn
-        self.mixing_matrix = numpy.matrix(numpy.loadtxt(mixing_matrix_fn))
-        self.unmixing_matrix_fn = unmixing_matrix_fn
-        self.unmixing_matrix = numpy.matrix(numpy.loadtxt(unmixing_matrix_fn))
-        # pre-mulitply the unmixing and mixing matrices
-        self.M = self.mixing_matrix * self.unmixing_matrix
+        if not os.path.exists(icafilename):
+            mm, um, self._cm, count, threshold = \
+                    icapp.cmdline.process_src(self, **icakwargs)
+            icapp.fio.save_ica(icafilename, mm, um, \
+                    self._cm, self.filenames, count, threshold)
+            self.seek(0)
+        else:
+            self._cm = icapp.fio.load_ica(icafilename, key='cm')
 
-    def read_frames(self, start, nframes):
-        return numpy.array(self.M * Reader.read_frames(self, start, nframes))
+    def read(self, n):
+        return icapp.ica.clean_data(Reader.read(n), self._cm)
