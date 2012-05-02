@@ -1,8 +1,8 @@
 ======
-Python port of WaveClus Matlab spike sorting package
+Python module for spike sorting
 ======
 
-This python package is (mostly) a port of WaveClus to python.
+This python package is (partially) a port of WaveClus to python.
 
 What is WaveClus
 ------
@@ -15,11 +15,6 @@ R. Quian Quiroga, Z. Nadasdy and Y. Ben-Shaul. Neural Computation 16, 1661-1687;
 
 An excellent description of spike sorting can be found here:
 http://www.scholarpedia.org/article/Spike_sorting
-
-How does pywaveclus differ?
-------
-
-WaveClus used a elliptic type bandpass filter.
 
 pywaveclus uses wavelet filtering based on code found here:
 http://www.berkelab.org/Software.html
