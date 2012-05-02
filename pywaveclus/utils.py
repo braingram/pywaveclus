@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-import contextlib
 import logging
-import os
-import time
 import sys
 
-import numpy as np
-import scipy.stats
+import numpy
 
 
 def get_os():
@@ -30,25 +26,6 @@ def get_os():
         raise ValueError("Unknown operating system: %s" % sys.platform)
 
 
-def ks(coeffs):
-    """
-    A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution
-    to norm
-
-    Parameters
-    ----------
-    coeffs : 1d array
-        A single wavelet coefficient measured across many spikes
-
-    Returns
-    -------
-    d : float
-        D statistic from Kolmogorov-Smirnov test
-    """
-    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs, ddof=1), 'norm')
-    return d
-
-
 def chunk(n, chunksize, overlap=0):
     """
     Chunk generator
@@ -65,19 +42,6 @@ def chunk(n, chunksize, overlap=0):
 def error(string, exception=Exception):
     logging.error(string)
     raise exception(string)
-
-
-@contextlib.contextmanager
-def waiting_lock_dir(lock_dir, delay=1):
-    while os.path.exists(lock_dir):
-        logging.info("Found lock directory, waiting to recheck in %d..." % \
-                delay)
-        time.sleep(delay)
-    os.makedirs(lock_dir)
-    try:
-        yield
-    finally:
-        os.rmdir(lock_dir)
 
 
 def parse_value(string, default, tmin, tmax, ttype):
@@ -132,36 +96,8 @@ def parse_time_range(timerange, tmin, tmax, ttype=int):
     return start, end
 
 
-def old_parse_time_range(timerange, minVal, maxVal, toVal=int):
-    if timerange.strip() == '':
-        return minVal, maxVal
-    elif ':' in timerange:
-        tokens = timerange.split(':')
-        assert len(tokens) == 2, "Invalid timerange[%s]" % timerange
-        start = tokens[0]
-        end = tokens[1]
-    else:
-        start = str(minVal)
-        end = timerange
-
-    try:
-        startVal = toVal(start)
-    except Exception as E:
-        raise ValueError("Count not convert %s to %s: %s" % (start, toVal, E))
-    try:
-        endVal = toVal(end)
-    except Exception as E:
-        raise ValueError("Count not convert %s to %s: %s" % (end, toVal, E))
-
-    return max(startVal, minVal), min(endVal, maxVal)
-
-
 def find_extreme(direction):
-    if direction == 'pos':
-        return lambda x: x.argmax()
-    elif direction == 'neg':
-        return lambda x: x.argmin()
-    elif direction == 'both':
-        return lambda x: np.abs(x).argmax()
-    else:
-        raise ValueError("Unknown direction [%s] for find_extreme" % direction)
+    return {'pos': lambda x: x.argmax(),
+            'neg': lambda x: x.argmin(),
+            'both': lambda x: numpy.abs(x).argmax(),
+            }[direction]

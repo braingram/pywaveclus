@@ -7,10 +7,9 @@
 
 #import logging
 
-import numpy as np
+import numpy
+import scipy.stats
 import pywt
-
-from .. import utils
 
 
 def filt(data, maxlevel=6, wavelet='db20', mode='sym', minlevel=1):
@@ -52,12 +51,12 @@ def filt(data, maxlevel=6, wavelet='db20', mode='sym', minlevel=1):
     http://www.ncbi.nlm.nih.gov/pubmed/18597853
     """
 
-    data = np.atleast_2d(data)
+    data = numpy.atleast_2d(data)
     # print data.shape
     numchannels, datalength = data.shape
 
     # Initialize the container for the filtered data
-    fdata = np.empty((numchannels, datalength))
+    fdata = numpy.empty((numchannels, datalength))
 
     for i in range(numchannels):
         # Decompose the signal
@@ -66,7 +65,7 @@ def filt(data, maxlevel=6, wavelet='db20', mode='sym', minlevel=1):
         coeffs[0][:] = 0
         lencoeffs = len(coeffs)
         # Highpass
-        for lvl in np.arange(1, minlevel):
+        for lvl in numpy.arange(1, minlevel):
             # print 'zeroing level: %i at index %i of %i coeffs' % \
             #        (lvl, maxlevel-lvl, len(coeffs))
             coeffs[lencoeffs - lvl][:] = 0
@@ -111,8 +110,8 @@ def calculate_cutoffs(samplingrate, maxlevel=None):
         # sf = 2 ** (lvl+1)
         # log2(sf) = lvl+1
         # log2(sf) - 1 = lvl
-        maxlevel = int(np.ceil(np.log2(samplingrate) - 1))
-    return samplingrate / (2 ** (np.arange(1, maxlevel + 2)))
+        maxlevel = int(numpy.ceil(numpy.log2(samplingrate) - 1))
+    return samplingrate / (2 ** (numpy.arange(1, maxlevel + 2)))
 
 
 def level_to_cutoffs(samplingrate, level):
@@ -161,41 +160,60 @@ def features(waveforms, nfeatures=10, levels=4, wavelet='haar'):
     """
     assert nfeatures > 0, "nfeatures[%i] must be > 0" % nfeatures
     assert levels > 0, "levels[%i] must be > 0" % levels
-    if type(waveforms) != np.ndarray:
-        waveforms = np.array(waveforms)
+    if type(waveforms) != numpy.ndarray:
+        waveforms = numpy.array(waveforms)
     assert waveforms.ndim == 2, "waveforms.ndim[%i] must be == 2" % \
             waveforms.ndim
     nwaveforms = len(waveforms)
 
     # test for size of coefficient vector
-    get_coeffs = lambda wf: np.array([i for sl in \
+    get_coeffs = lambda wf: numpy.array([i for sl in \
             pywt.wavedec(wf, wavelet, level=levels) for i in sl][:len(wf)])
     tr = get_coeffs(waveforms[0])
     ncoeffs = len(tr)
 
-    coeffs = np.zeros((nwaveforms, ncoeffs))
+    coeffs = numpy.zeros((nwaveforms, ncoeffs))
     coeffs[0][:] = tr  # store calculated coefficients for waveform 1
     for i in xrange(1, len(waveforms)):  # get coefficient for other waveforms
         coeffs[i][:] = get_coeffs(waveforms[i])
 
     # KS test for coefficient selection
-    coefffitness = np.zeros(ncoeffs)
+    coefffitness = numpy.zeros(ncoeffs)
     for i in xrange(ncoeffs):
-        thrdist = np.std(coeffs[:, i], ddof=1) * 3
-        thrdistmin = np.mean(coeffs[:, i]) - thrdist
-        thrdistmax = np.mean(coeffs[:, i]) + thrdist
+        thrdist = numpy.std(coeffs[:, i], ddof=1) * 3
+        thrdistmin = numpy.mean(coeffs[:, i]) - thrdist
+        thrdistmax = numpy.mean(coeffs[:, i]) + thrdist
         # test for how many points lie within 3 std dev of mean
         culledcoeffs = coeffs[(coeffs[:, i] > thrdistmin) & \
                 (coeffs[:, i] < thrdistmax), i]
         if len(culledcoeffs) > 10:
-            coefffitness[i] = utils.ks(culledcoeffs)
+            coefffitness[i] = ks(culledcoeffs)
         # else 0 (see coefffitness definition)
     # print coefffitness
     # store the indices of the 'good' coefficients
-    ind = np.argsort(coefffitness)
+    ind = numpy.argsort(coefffitness)
     goodcoeff = ind[::-1][:nfeatures]
     # print goodcoeff
     # print ind
 
     # this returns features
     return coeffs[:, goodcoeff]
+
+
+def ks(coeffs):
+    """
+    A thin wrapper around scipy.stats.kstest to set ddof to 1 distribution
+    to norm
+
+    Parameters
+    ----------
+    coeffs : 1d array
+        A single wavelet coefficient measured across many spikes
+
+    Returns
+    -------
+    d : float
+        D statistic from Kolmogorov-Smirnov test
+    """
+    d, _ = scipy.stats.kstest(scipy.stats.zscore(coeffs, ddof=1), 'norm')
+    return d
