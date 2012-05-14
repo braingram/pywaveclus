@@ -10,37 +10,56 @@ import re
 #    warnings.simplefilter("ignore")
 #    import scikits.audiolab
 
-from ... import probe
+from ... import probes
 #from ... import utils
 
 import icapp
 
 
 def position_sorted(fns, ptype, indexre):
-    to_pos = probe.lookup_converter_function(ptype, 'tdt', 'pos')
+    to_pos = probes.lookup_converter_function(ptype, 'tdt', 'pos')
     return sorted(fns, key=lambda fn: \
             to_pos(int(re.findall(indexre, os.path.basename(fn))[0])))
 
 
 class Reader(icapp.fio.MultiAudioFile):
     def __init__(self, filenames=None, probetype='nna', \
-            indexre=r'_([0-9]+)\#*', chunksize=441000, **kwargs):
+            indexre=r'_([0-9]+)\#*', chunksize=441000,
+            chunkoverlap=0, **kwargs):
         assert filenames is not None, "No filenames supplied to reader"
         # position sort filenames and create a the multiaudiofile
         icapp.fio.MultiAudioFile.__init__(self, \
                 position_sorted(list(filenames), probetype, indexre), **kwargs)
         self.probetype = probetype
         self.chunksize = chunksize
+        self.chunkoverlap = chunkoverlap
 
         # store channel index scheme conversion functions
-        self.tdt_to_pos = probe.lookup_converter_function(probetype, \
+        self.tdt_to_pos = probes.lookup_converter_function(probetype, \
                 'tdt', 'pos')
-        self.pos_to_tdt = probe.lookup_converter_function(probetype, \
+        self.pos_to_tdt = probes.lookup_converter_function(probetype, \
                 'pos', 'tdt')
 
     def seek_and_read(self, start, n):
         self.seek(start)
         return self.read(n)
+
+    def chunk(self, overlap=None):
+        if overlap is None:
+            overlap = self.chunkoverlap
+        self.seek(0)
+        i = 0
+        if overlap == 0:
+            while i + self.chunksize < len(self):
+                yield self.read(self.chunksize)
+                i += self.chunksize
+            yield self.read(len(self) - i)
+        else:
+            while i + self.chunksize + overlap < len(self):
+                yield self.read(self.chunksize + overlap)
+                i += self.chunksize
+                self.seek(i)
+            yield self.read(len(self) - i)
 
 
 class ICAReader(Reader):

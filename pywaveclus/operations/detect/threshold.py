@@ -2,13 +2,24 @@
 
 import numpy
 
+from ... import utils
+
 
 class Detector(object):
-    def __init__(self, baseline=None, nthresh=None):
-        pass
+    def __init__(self, baseline=None, nthresh=None, reader=None, filt=None):
+        assert baseline is not None, "baseline must have a value"
+        assert nthresh is not None, "nthresh must have a value"
+        assert reader is not None, "reader must have a value"
+        assert filt is not None, "filt must have a value"
+
+        # calculate threshold
+        start, end = utils.parse_time_range(baseline, 0, len(reader))
+        reader.seek(start)
+        self.threshold = calculate_threshold(filt(reader.read(end - start)), \
+                nthresh)
 
     def __call__(self, data, **kwargs):
-        return find_spikes(data, *self.args, **self.kwargs)
+        return find_spikes(data, self.threshold, *self.args, **self.kwargs)
 
 
 def calculate_threshold(data, n=5):

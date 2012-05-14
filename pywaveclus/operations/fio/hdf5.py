@@ -9,7 +9,7 @@ def make_spike_table_description(pre, post, nfeatures):
         time = tables.Int64Col()
         wave = tables.Float64Col(shape=(pre + post))
         clu = tables.UInt8Col()
-        #features = tables.Float64Col(shape=(nfeatures))
+        features = tables.Float64Col(shape=(nfeatures))
     return SpikeTableDescription
 
 
