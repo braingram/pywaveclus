@@ -2,7 +2,7 @@
 
 import sys
 
-import pywaveclus
+import pywaveclus.process
 
 # process command line options
 # -- files

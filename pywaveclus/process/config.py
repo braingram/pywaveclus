@@ -19,16 +19,16 @@ indexre: _([0-9]+)#*
 chunksize: 441000
 chunkoverlap: 441
 dtype: f8
-start:
-stop:
+start: 0.0
+stop: 1.0
 
 [ica]
-icafilename = 'ica.p'
-icamethod = random
-icasargs = 102400
-icancomponents = 32
-icacount = 3
-icastdthreshold = 2
+filename = 'ica.p'
+method = random
+sargs = 102400
+ncomponents = 32
+count = 3
+stdthreshold = 2
 
 [filter]
 method: wavelet
@@ -62,6 +62,7 @@ pre: 40
 pre: 40
 post: 88
 nfeatures: 6
+filename: pycluster.h5
 """
 
 

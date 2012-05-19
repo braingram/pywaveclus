@@ -7,3 +7,8 @@ import filt
 import fio
 
 __all__ = ['cluster', 'detect', 'extract', 'filt', 'fio']
+
+from cluster import get_cluster
+from detect import get_detect
+from extract import get_extract
+from fio import get_reader, get_writer

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
 import config
-import process
+import cmdline
 
-__all__ = ['config', 'process']
+__all__ = ['config', 'cmdline']

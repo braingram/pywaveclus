@@ -89,6 +89,7 @@ class ICAReader(Reader):
         assert icafilename is not None, "No ica file supplied"
         assert icakwargs is not None, "No ica kwargs supplied"
         Reader.__init__(self, **kwargs)
+        self.read = self.raw_read
         if not os.path.exists(icafilename):
             mm, um, self._cm, count, threshold = \
                     icapp.cmdline.process_src(self, **icakwargs)
@@ -97,6 +98,11 @@ class ICAReader(Reader):
             self.seek(0)
         else:
             self._cm = icapp.fio.load_ica(icafilename, key='cm')
+        self.read = self.ica_read
 
-    def read(self, n):
-        return icapp.ica.clean_data(Reader.read(n), self._cm)
+    def ica_read(self, n):
+        print self._cm
+        return icapp.ica.clean_data(self.raw_read, self._cm)
+
+    def raw_read(self, n):
+        return Reader.read(self, n)
