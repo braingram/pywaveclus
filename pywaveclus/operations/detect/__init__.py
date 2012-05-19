@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from .. import utils
+from ... import utils
 
 import threshold
 

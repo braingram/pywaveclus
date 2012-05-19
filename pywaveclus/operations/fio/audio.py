@@ -25,7 +25,7 @@ def position_sorted(fns, ptype, indexre):
 class Reader(icapp.fio.MultiAudioFile):
     def __init__(self, filenames=None, probetype='nna', \
             indexre=r'_([0-9]+)\#*', chunksize=441000,
-            chunkoverlap=0, **kwargs):
+            chunkoverlap=0, start=0, stop=None, **kwargs):
         assert filenames is not None, "No filenames supplied to reader"
         # position sort filenames and create a the multiaudiofile
         icapp.fio.MultiAudioFile.__init__(self, \
@@ -33,6 +33,10 @@ class Reader(icapp.fio.MultiAudioFile):
         self.probetype = probetype
         self.chunksize = chunksize
         self.chunkoverlap = chunkoverlap
+        self.start = start
+        self.stop = stop
+        if self.stop is None:
+            self.stop = len(self)
 
         # store channel index scheme conversion functions
         self.tdt_to_pos = probes.lookup_converter_function(probetype, \
@@ -44,22 +48,40 @@ class Reader(icapp.fio.MultiAudioFile):
         self.seek(start)
         return self.read(n)
 
-    def chunk(self, overlap=None):
+    def chunk(self, overlap=None, start=None, stop=None, full=False):
+        if start is None:
+            start = self.start
+        if stop is None:
+            stop = self.stop
         if overlap is None:
             overlap = self.chunkoverlap
-        self.seek(0)
-        i = 0
+
+        self.seek(start)
+        i = start
         if overlap == 0:
-            while i + self.chunksize < len(self):
-                yield self.read(self.chunksize)
+            while i + self.chunksize < stop:
+                if full:
+                    yield self.read(self.chunksize), i, i + self.chunksize
+                else:
+                    yield self.read(self.chunksize)
                 i += self.chunksize
-            yield self.read(len(self) - i)
+            if full:
+                yield self.read(stop - i), i, stop
+            else:
+                yield self.read(stop - i)
         else:
-            while i + self.chunksize + overlap < len(self):
-                yield self.read(self.chunksize + overlap)
+            while i + self.chunksize + overlap < stop:
+                if full:
+                    yield self.read(self.chunksize + overlap), \
+                            i, i + self.chunksize + overlap
+                else:
+                    yield self.read(self.chunksize + overlap)
                 i += self.chunksize
                 self.seek(i)
-            yield self.read(len(self) - i)
+            if full:
+                yield self.read(stop - i), i, stop
+            else:
+                yield self.read(stop - i)
 
 
 class ICAReader(Reader):

@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 
-import logging
-import os
 import sys
-
-import numpy as np
-import pylab as pl
-import matplotlib
-import tables
 
 import pywaveclus
 
@@ -27,7 +20,7 @@ output = pywaveclus.process.cmdline.process(files, cfg)
 #cfg, times, waves, clusters, info = pywaveclus.process.process.process_file()
 
 # save
-logging.debug("Saving results to %s" % outfile)
+#logging.debug("Saving results to %s" % outfile)
 
 # plot?
-logging.debug("Plotting")
+#logging.debug("Plotting")

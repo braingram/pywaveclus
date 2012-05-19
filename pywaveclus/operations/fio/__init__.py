@@ -15,6 +15,14 @@ def get_reader(files, cfg, section='reader', ica_section='ica'):
     kwargs['chunksize'] = cfg.getint(section, 'chunksize')
     kwargs['chunkoverlap'] = cfg.getint(section, 'chunkoverlap')
 
+    if cfg.has_option(section, 'start'):
+        kwargs['start'] = cfg.getint(section, 'start')
+    else:
+        kwargs['start'] = 0
+
+    if cfg.has_option(section, 'stop'):
+        kwargs['stop'] = cfg.getint(section, 'stop')
+
     kwargs['icafilename'] = cfg.get(ica_section, 'filename')
     kwargs['icakwargs'] = {}
     kwargs['icakwargs']['method'] = cfg.get(ica_section, 'method')
@@ -33,4 +41,7 @@ def get_reader(files, cfg, section='reader', ica_section='ica'):
 
 
 def get_writer(cfg, section='writer'):
-    pass
+    kwargs = {}
+    for attr in ['filename', 'pre', 'post', 'nfeatures']:
+        kwargs[attr] = cfg.get(section, attr)
+    return hdf5.HDF5Writer(**kwargs)

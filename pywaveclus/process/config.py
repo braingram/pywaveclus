@@ -4,6 +4,7 @@ import cconfig
 
 CFGDEFAULTS = """
 [main]
+njobs: -1
 outputdir:
 timerange:
 plot:
@@ -16,8 +17,10 @@ adjacentfiles:
 probetype: nna
 indexre: _([0-9]+)#*
 chunksize: 441000
-chunkoverlap: 44100
+chunkoverlap: 441
 dtype: f8
+start:
+stop:
 
 [ica]
 icafilename = 'ica.p'
