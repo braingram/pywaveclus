@@ -56,6 +56,7 @@ def get_reader(files, cfg, section='reader', ica_section='ica'):
 
 def get_writer(cfg, section='writer'):
     kwargs = {}
-    for attr in ['filename', 'pre', 'post', 'nfeatures']:
-        kwargs[attr] = cfg.get(section, attr)
+    kwargs['filename'] = cfg.get(section, 'filename')
+    for attr in ['pre', 'post', 'nfeatures']:
+        kwargs[attr] = cfg.getint(section, attr)
     return hdf5.HDF5Writer(**kwargs)

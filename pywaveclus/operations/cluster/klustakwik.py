@@ -83,43 +83,50 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         # if no + or no -, just cluster the other
         if (len(pinds) == 0) or (len(ninds) == 0):
             return cluster(waveforms, nfeatures, featuretype, minclusters, \
-                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+                maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
 
         pwaves = waveforms[pinds]
         nwaves = waveforms[ninds]
 
-        pc, pi = cluster(pwaves, nfeatures, featuretype, minclusters, \
+        pc, pf, pi = cluster(pwaves, nfeatures, featuretype, minclusters, \
                 maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
-        nc, ni = cluster(nwaves, nfeatures, featuretype, minclusters, \
+        nc, nf, ni = cluster(nwaves, nfeatures, featuretype, minclusters, \
                 maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
 
         info = dict([('p' + k, v) for k, v in pi.iteritems()])
         info.update(dict([('n' + k, v) for k, v in ni.iteritems()]))
 
-        clusters = np.zeros(len(pc) + len(nc), dtype=pc.dtype)
+        clusters = np.zeros(len(pc) + len(nc), dtype='int64')
         # merge cluster 0 from each
         # interleave other clusters
         pc *= 2  # keeps 0 -> 0
         nc = nc * 2 - 1  # makes 0 -> -1
         ti = nc > 0
-        clusters[pinds] = pc
-        clusters[ninds[ti]] = nc[ti]
+        clusters[pinds] = pc.astype('int64')
+        clusters[ninds[ti]] = nc[ti].astype('int64')
 
-        return remove_empty(clusters), info
+        features = np.zeros((len(pf) + len(nc), nfeatures), dtype='float64')
+        features[pinds] = pf.astype('float64')
+        features[ninds] = nf.astype('float64')
+
+        return remove_empty(clusters), features, info
 
     if len(waveforms) < minspikes:
-        return np.zeros(len(waveforms)), {}
+        return np.zeros(len(waveforms)), \
+                np.zeros((len(waveforms), nfeatures)), {}
+
+    if featuretype == 'pca':
+        features, pca_info = pca.features(waveforms, nfeatures)
+    elif featuretype == 'ica':
+        raise NotImplementedError
+        features = pca.ica.features(waveforms, nfeatures)
+    else:
+        raise ValueError("Unknown feature type[%s]" % featuretype)
+
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 
     datafile = "/".join((tempdir, "k_input.fet.1"))
     outfile = "/".join((tempdir, "k_input.clu.1"))
-
-    if featuretype == 'pca':
-        features, pca_info = pca.pca.features(waveforms, nfeatures)
-    elif featuretype == 'ica':
-        features = pca.ica.features(waveforms, nfeatures)
-    else:
-        raise ValueError("Unknown feature type[%s]" % featuretype)
 
     with open(datafile, 'w') as df:
         df.write('%i\n' % nfeatures)
@@ -127,7 +134,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
     # copy correct executable
     exefile = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../bin/klustakwik_' + utils.get_os()
+            '/../../bin/klustakwik_' + utils.get_os()
     logging.debug("Found klustakwik executable: %s" % exefile)
     shutil.copy2(exefile, tempdir)
     exefile = 'klustakwik_' + utils.get_os()
@@ -160,4 +167,4 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
     clusters = sort_clusters(clusters)
 
-    return clusters, pca_info
+    return clusters, features, pca_info

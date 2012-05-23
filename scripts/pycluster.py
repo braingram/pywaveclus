@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import sys
 
 import pywaveclus.process
@@ -12,6 +13,9 @@ import pywaveclus.process
 # -- -p plot?
 
 # load config file
+
+logging.basicConfig(level=logging.DEBUG)
+
 # load files
 files, cfg = pywaveclus.process.cmdline.parse(sys.argv[1:])
 

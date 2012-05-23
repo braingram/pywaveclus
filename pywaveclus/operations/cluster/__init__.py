@@ -18,7 +18,7 @@ class KlustakwikCluster(object):
         self.pre = pre
 
     def __call__(self, waveforms):
-        return klustakwik.cluster(waveforms, self.nfeatures, \
+        return klustakwik.cluster(waveforms, self.nfeatures, 'pca',\
                 self.minclusters, self.maxclusters, self.separate, \
                 self.pre, self.minspikes)
 

@@ -22,6 +22,20 @@ def position_sorted(fns, ptype, indexre):
             to_pos(int(re.findall(indexre, os.path.basename(fn))[0])))
 
 
+def to_int(number, maximum):
+    if number is None:
+        return maximum
+    elif isinstance(number, float):
+        assert (number >= 0) and (number <= 1.0), \
+                "to_int only accepts 0<=[%s]<=1.0" % number
+        return int(number * maximum)
+    elif isinstance(number, int):
+        return number
+    else:
+        raise TypeError("Invalid Type[%s:%s] for to_int" % \
+                (type(number), number))
+
+
 class Reader(icapp.fio.MultiAudioFile):
     def __init__(self, filenames=None, probetype='nna', \
             indexre=r'_([0-9]+)\#*', chunksize=441000,
@@ -33,10 +47,10 @@ class Reader(icapp.fio.MultiAudioFile):
         self.probetype = probetype
         self.chunksize = chunksize
         self.chunkoverlap = chunkoverlap
-        self.start = start
-        self.stop = stop
-        if self.stop is None:
-            self.stop = len(self)
+        self.start = to_int(start, len(self))
+        self.stop = to_int(stop, len(self))
+        #if self.stop is None:
+        #    self.stop = len(self)
 
         # store channel index scheme conversion functions
         self.tdt_to_pos = probes.lookup_converter_function(probetype, \
@@ -51,8 +65,12 @@ class Reader(icapp.fio.MultiAudioFile):
     def chunk(self, overlap=None, start=None, stop=None, full=False):
         if start is None:
             start = self.start
+        else:
+            start = to_int(start)
         if stop is None:
             stop = self.stop
+        else:
+            stop = to_int(stop)
         if overlap is None:
             overlap = self.chunkoverlap
 
@@ -101,8 +119,8 @@ class ICAReader(Reader):
         self.read = self.ica_read
 
     def ica_read(self, n):
-        print self._cm
-        return icapp.ica.clean_data(self.raw_read, self._cm)
+        #print self._cm
+        return icapp.ica.clean_data(self.raw_read(n), self._cm)
 
     def raw_read(self, n):
         return Reader.read(self, n)

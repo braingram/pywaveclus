@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
+import logging
+
+import joblib
 import numpy
 
 import config
 from .. import operations
-
-import joblib
 
 
 def parse(args):
@@ -35,61 +36,87 @@ def parse(args):
 
 def process(files, cfg, section='main'):
     """docstring for process"""
+    logging.root.setLevel(logging.DEBUG)
+
     # find operations (based on cfg)
     reader = operations.get_reader(files, cfg)
     filt = operations.get_filt(cfg)
     detect = operations.get_detect(cfg, reader, filt)
     extract = operations.get_extract(cfg)
+    #feature = operations.get_feature(cfg)
     cluster = operations.get_cluster(cfg)
     writer = operations.get_writer(cfg)
 
     # get main options
-    njobs = cfg.get(section, 'njobs')
+    n_jobs = cfg.getint(section, 'n_jobs')
     nchan = reader.nchan
 
     # run
-    indices = numpy.array([]).reshape((nchan, 0))
-    waveforms = numpy.array([]).reshape((nchan, 0, extract.pre + extract.post))
-    for chunk, start, end in reader.chunks(full=True):
+    indices = []
+    waveforms = []
+    for i in xrange(nchan):
+        indices.append(numpy.array([]))
+        waveforms.append(numpy.array([]).reshape(0, \
+                extract.pre + extract.post))
+    #indices = numpy.array([]).reshape((nchan, 0))
+    #waveforms = numpy.array([]).reshape((nchan, 0, \
+    #        extract.pre + extract.post))
+    for chunk, start, end in reader.chunk(full=True):
+        logging.debug("Processing chunk: %s, %s, %s" \
+                % (chunk.shape, start, end))
+        #print "Processing chunk: %s, %s, %s" \
+        #        % (chunk.shape, start, end)
         # parallel filter and detect
-        fdata = joblib.Parallel(njobs=njobs)(joblib.delayed(filt)(ch) \
+        fdata = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(filt)(ch) \
                 for ch in chunk)
-        sis = joblib.Parallel(njobs=njobs)(joblib.delayed(detect)(ch) \
-                for ch in chunk)\
+        sis = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(detect)(fd, i) \
+                for (i, fd) in enumerate(fdata))
         # remove spikes that start > chunksize
-        sis = sis[sis <= reader.chunksize]
-        if len(sis) == 0:
-            continue
-        waves = joblib.Parallel(njos=njobs)(joblib.delayed(extract)(ch, fd) \
-                for ch, fd in zip(fdata, sis))
+        sis = [s[s <= reader.chunksize] for s in sis]
+        # remove spikes that start < extract.pre
+        sis = [s[s >= extract.pre] for s in sis]
+        # reemove spikes that go over the end of the data
+        sis = [s[s <= len(fdata[0]) - extract.post] for s in sis]
+        waves = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(extract)(fd, \
+                inds) for fd, inds in zip(fdata, sis))
         # offset spike indices to absolute position
-        sis += start
-        numpy.hstack((indices, sis))
-        numpy.hstack((waveforms, waves))
+        sis = [s + start for s in sis]
+        for i in xrange(nchan):
+            indices[i] = numpy.hstack((indices[i], sis[i]))
+            waveforms[i] = numpy.vstack((waveforms[i], waves[i]))
 
-    # indices = spike indices (locations)
-    # waveforms = spike waveforms (only single channel now)
+    logging.debug("Indices  :" + "".join([" %i" % len(i) for i in indices]))
+    logging.debug("Waveforms:" + "".join([" %i" % len(w) for w in waveforms]))
+
     # write data to file
     writer.write_indices(indices)
     writer.write_waveforms(waveforms)
 
     ## features
-    #features = joblib.Parallel(njobs=njobs)(joblib.delayed(feature)(ch) \
+    #features = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(feature)(ch) \
     #        for ch in waveforms)
+    #feature_info = [f[1] for f in features]
+    #features = [f[0] for f in features]
     #writer.write_features(features)
+    #writer.write_feature_info(feature_info)
 
     # cluster: returns clusters and cluster_info
-    clusters = joblib.Parallel(njobs=njobs)(joblib.delayed(cluster)(ch) \
+    clusters = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(cluster)(ch) \
             for ch in waveforms)
-    cluster_info = [c[1] for c in clusters]
+    features_info = [c[2] for c in clusters]
+    features = [c[1] for c in clusters]
+    #cluster_info = [c[1] for c in clusters]
     clusters = [c[0] for c in clusters]
 
     # write cluster to data
     writer.write_clusters(clusters)
-    writer.write_cluster_info(cluster_info)
+    writer.write_features(features)
+    writer.write_features_info(features_info)
+    #writer.write_cluster_info(cluster_info)
 
     # plot????
     #[writer(cluster(extract(detect(filt(chunk))))) \
     #        for chunk in reader.chunks()]
 
     # return output stuff
+    writer.close()

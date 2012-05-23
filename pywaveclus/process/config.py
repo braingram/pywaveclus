@@ -4,7 +4,7 @@ import cconfig
 
 CFGDEFAULTS = """
 [main]
-njobs: -1
+n_jobs: -1
 outputdir:
 timerange:
 plot:
@@ -23,12 +23,13 @@ start: 0.0
 stop: 1.0
 
 [ica]
-filename = 'ica.p'
+filename = ica.p
 method = random
 sargs = 102400
 ncomponents = 32
 count = 3
 stdthreshold = 2
+threshold = 0.1
 
 [filter]
 method: wavelet
@@ -44,6 +45,7 @@ baseline: 100000
 direction: both
 minwidth: 1
 ref: 44
+n_jobs: -1
 
 [extract]
 pre: 40

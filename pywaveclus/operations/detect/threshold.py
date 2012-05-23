@@ -2,25 +2,6 @@
 
 import numpy
 
-from ... import utils
-
-
-class Detector(object):
-    def __init__(self, baseline=None, nthresh=None, reader=None, filt=None):
-        assert baseline is not None, "baseline must have a value"
-        assert nthresh is not None, "nthresh must have a value"
-        assert reader is not None, "reader must have a value"
-        assert filt is not None, "filt must have a value"
-
-        # calculate threshold
-        start, end = utils.parse_time_range(baseline, 0, len(reader))
-        reader.seek(start)
-        self.threshold = calculate_threshold(filt(reader.read(end - start)), \
-                nthresh)
-
-    def __call__(self, data, **kwargs):
-        return find_spikes(data, self.threshold, *self.args, **self.kwargs)
-
 
 def calculate_threshold(data, n=5):
     """
@@ -86,14 +67,18 @@ def detect_sub(data, mf, sf, minwidth, ref):
     spike_indices : 1d array
         See find_spikes
     """
+    if not len(data):
+        return numpy.array([], dtype=int)
     sub = numpy.where(sf(data))[0]
     sis = sub[:-1]
     sws = sub[1:] - sub[:-1]
 
     # remove spikes < minwidth
-    cis = numpy.where(sws >= minwidth)[0]
+    cis = numpy.where(sws >= minwidth + 1)[0]
     sis = sis[cis]
     sws = sws[cis]
+    if not len(sis):
+        return numpy.array([], dtype=int)
 
     # remove spikes < ref samples apart
     di = numpy.empty_like(sis)
