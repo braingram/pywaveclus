@@ -5,6 +5,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 
 import numpy as np
@@ -96,14 +97,38 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         info = dict([('p' + k, v) for k, v in pi.iteritems()])
         info.update(dict([('n' + k, v) for k, v in ni.iteritems()]))
 
-        clusters = np.zeros(len(pc) + len(nc), dtype=pc.dtype)
+        pc = np.array(pc, dtype=np.int32)
+        nc = np.array(nc, dtype=np.int32)
+        clusters = np.zeros(len(pc) + len(nc), dtype=np.int32)
         # merge cluster 0 from each
         # interleave other clusters
         pc *= 2  # keeps 0 -> 0
         nc = nc * 2 - 1  # makes 0 -> -1
         ti = nc > 0
-        clusters[pinds] = pc
-        clusters[ninds[ti]] = nc[ti]
+        try:
+            if len(pinds):
+                clusters[pinds] = pc
+            if len(ti) and len(ninds[ti]) and len(nc[ti]):
+                clusters[ninds[ti]] = nc[ti]
+        except TypeError as E:
+            logging.debug("len(pc) %s" % len(pc))
+            logging.debug("len(clusters) %s" % len(clusters))
+            logging.debug("len(nc) %s" % len(nc))
+            logging.debug("len(ti) %s" % len(ti))
+            logging.debug("len(ninds[ti]) %s" % len(ninds[ti]))
+            logging.debug("len(nc[ti]) %s" % len(nc[ti]))
+            logging.debug("type(pc) %s" % type(pc))
+            logging.debug("type(ti) %s" % type(ti))
+            logging.debug("type(ninds) %s" % type(ninds))
+            logging.debug("type(nc) %s" % type(nc))
+            logging.debug("clusters.dtype %s" % clusters.dtype)
+            logging.debug("nc[ti].dtype %s" % nc[ti].dtype)
+            logging.debug("ti.dtype %s" % ti.dtype)
+            logging.debug("ninds.dtype %s" % ninds.dtype)
+            logging.debug("nc.dtype %s" % nc.dtype)
+            sys.stdout.flush()
+            sys.stderr.flush()
+            raise E
 
         return remove_empty(clusters), info
 
