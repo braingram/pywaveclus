@@ -150,7 +150,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
     # copy correct executable
     exefile = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../bin/klustakwik_' + utils.get_os()
+            '/bin/klustakwik_' + utils.get_os()
     logging.debug("Found klustakwik executable: %s" % exefile)
     shutil.copy2(exefile, tempdir)
     exefile = 'klustakwik_' + utils.get_os()
