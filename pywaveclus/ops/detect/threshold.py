@@ -4,7 +4,6 @@ import logging
 
 import numpy as np
 
-from ... import dsp
 from ... import utils
 
 
@@ -39,7 +38,7 @@ def calculate_threshold(data, n=5):
 
 
 def find_spikes(data, threshold, artifact, direction, ref, minwidth, slop):
-    crossings = dsp.threshold.find_crossings(data, threshold, direction)
+    crossings = utils.find_crossings(data, threshold, direction)
     if not len(crossings):
         return []
     find_extreme = utils.find_extreme(direction)
@@ -82,7 +81,7 @@ def old_find_spikes(data, threshold, artifact, direction='neg', prew=40,
         slop :
         oversample :
     """
-    crossings = dsp.threshold.find_crossings(data, threshold, direction)
+    crossings = utils.find_crossings(data, threshold, direction)
     if not len(crossings):
         logging.debug(
             "No threshold crossings found over %f to %f at T:%f" %
