@@ -10,8 +10,8 @@ import tempfile
 
 import numpy as np
 
-from .. import dsp
-from .. import utils
+from . import pca
+from ... import utils
 
 
 def remove_empty(clusters):
@@ -140,9 +140,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     outfile = "/".join((tempdir, "k_input.clu.1"))
 
     if featuretype == 'pca':
-        features, pca_info = dsp.pca.features(waveforms, nfeatures)
-    elif featuretype == 'ica':
-        features = dsp.ica.features(waveforms, nfeatures)
+        features, pca_info = pca.features(waveforms, nfeatures)
     else:
         raise ValueError("Unknown feature type[%s]" % featuretype)
 

@@ -2,41 +2,38 @@
 
 import logging
 
-import neo
+#import neo
 import threshold
 
-from .. import utils
-
-__all__ = ['neo', 'threshold']
+__all__ = ['threshold']
 
 
-def detect_from_config(reader, filt, cfg):
-    method = cfg.get('detect', 'method')
-    baseline = utils.parse_time_range(cfg.get('detect', 'baseline'), \
-            0, reader.nframes, int)
-    reader.seek(baseline[0])
-    d = reader.read_frames(baseline[1] - baseline[0])
-
+def detect_from_kwargs(baseline, **kwargs):
+    method = kwargs.get('method', 'threshold')
     if method == 'threshold':
-        n = cfg.getfloat('detect', 'nthresh')
-        T = threshold.calculate_threshold(filt(d), n)
-        AT = T / float(n) * cfg.getfloat('detect', 'artifact')
-        logging.debug("Found threshold: %f" % T)
+        direction = kwargs['direction']
+        ref = kwargs['ref']
+        minwidth = kwargs['minwidth']
+        slop = kwargs['slop']
+        n = kwargs['nthresh']
+        T = threshold.calculate_threshold(baseline, n)
+        AT = T / float(n) * kwargs['artifact']
+        logging.debug("Found threshold: %s" % T)
+        logging.debug("Found artifact threshold: %s" % AT)
         if T == 0.:
             return lambda x: ([], [])
-
-        pre = cfg.getint('detect', 'pre')
-        post = cfg.getint('detect', 'post')
-        direction = cfg.get('detect', 'direction')
-        minwidth = cfg.getint('detect', 'minwidth')
-        slop = cfg.getint('detect', 'slop')
-        ref = cfg.getint('detect', 'ref')
-        oversample = cfg.getint('detect', 'oversample')
-        sliding = cfg.getboolean('detect', 'sliding')
-
-        return lambda x: threshold.find_spikes(x, T, AT, direction, pre, \
-                post, ref, minwidth, slop, oversample)
+        return lambda x: threshold.find_spikes(
+            x, T, AT, direction, ref, minwidth, slop)
     elif method == 'neo':
-        raise NotImplemented
+        raise NotImplementedError
     else:
-        raise ValueError("Unknown detect method: %s" % method)
+        raise ValueError('Unknown detect method: %s' % method)
+
+
+def detect_from_config(baseline, cfg, section='detect'):
+    kwargs = {}
+    for k in ('method', 'direction', 'ref', 'minwidth',
+              'slop', 'nthresh', 'artifact'):
+        if cfg.has_option(section, k):
+            kwargs[k] = cfg.get(section, k)
+    return detect_from_kwargs(baseline, **kwargs)

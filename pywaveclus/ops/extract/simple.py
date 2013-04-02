@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 
-#from .. import utils
+
+def simple(data, indices, pre, post):
+    waves = []
+    for i in indices:
+        if (i - pre < 0) or (i + post > data.size):
+            continue
+        wave = data[i - pre: i + post]
+        if len(data) == pre + post:
+            waves.append(wave)
+        del wave
+    return waves
 
 
-def simple(readers, indices, ffunc, pre, post):
+def old_simple(readers, indices, ffunc, pre, post):
     #find_extreme = utils.find_extreme(direction)
     waves = []
     main = readers[0]

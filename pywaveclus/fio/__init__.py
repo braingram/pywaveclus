@@ -1,27 +1,19 @@
 #!/usr/bin/env python
 
-import os
-
-import numpy as np
-
 import audio
-import raw
 
-__all__ = ['audio', 'raw']
+__all__ = ['audio']
 
 
-def reader_from_config(cfg):
-    filename = cfg.get('main', 'filename')
-    ext = os.path.splitext(filename)[1].lower()
-    if ext == '.wav':
-        dtype = np.dtype(cfg.get('reader', 'dtype'))
-        lockdir = cfg.get('reader', 'lockdir')
-        if lockdir.strip() == '':
-            lockdir = None
-        reference = cfg.get('main', 'reference')
-        if reference.strip() != '':
-            return audio.ReferencedReader(filename, reference, dtype, lockdir)
-        else:
-            return audio.Reader(filename, dtype, lockdir)
+def reader_from_kwargs(filenames, *args, **kwargs):
+    if len(args):
+        return audio.ICAReader(filenames, *args, **kwargs)
     else:
-        raise ValueError('Unknown extension %s [%s]' % (ext, filename))
+        return audio.Reader(filenames, **kwargs)
+
+
+def reader_from_config(filenames, cfg, *args, **kwargs):
+    s = kwargs.get('section', 'reader')
+    for k in ('dtype', 'chunksize', 'chunkoverlap'):
+        kwargs[k] = cfg.get(s, k)
+    return reader_from_kwargs(filenames, *args, **kwargs)

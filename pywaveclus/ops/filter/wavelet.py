@@ -10,7 +10,7 @@
 import numpy as np
 import pywt
 
-from .. import utils
+from ... import utils
 
 
 def filt(data, maxlevel=6, wavelet='db20', mode='sym', minlevel=1):
@@ -74,8 +74,8 @@ def filt(data, maxlevel=6, wavelet='db20', mode='sym', minlevel=1):
         # the array returned by pywt.waverec will have one extra value
         # at the end, so we need to make sure to trim the returned
         # array to the length of data[i,:]:
-        fdata[i, :] = pywt.waverec(coeffs, wavelet, \
-                mode=mode)[:len(data[i, :])]
+        fdata[i, :] = pywt.waverec(
+            coeffs, wavelet, mode=mode)[:len(data[i, :])]
 
     if fdata.shape[0] == 1:
         return fdata.ravel()  # If the signal is 1D, return a 1D array
@@ -164,12 +164,13 @@ def features(waveforms, nfeatures=10, levels=4, wavelet='haar'):
     if type(waveforms) != np.ndarray:
         waveforms = np.array(waveforms)
     assert waveforms.ndim == 2, "waveforms.ndim[%i] must be == 2" % \
-            waveforms.ndim
+        waveforms.ndim
     nwaveforms = len(waveforms)
 
     # test for size of coefficient vector
-    get_coeffs = lambda wf: np.array([i for sl in \
-            pywt.wavedec(wf, wavelet, level=levels) for i in sl][:len(wf)])
+    get_coeffs = lambda wf: np.array(
+        [i for sl in pywt.wavedec(wf, wavelet, level=levels)
+         for i in sl][:len(wf)])
     tr = get_coeffs(waveforms[0])
     ncoeffs = len(tr)
 
@@ -185,8 +186,8 @@ def features(waveforms, nfeatures=10, levels=4, wavelet='haar'):
         thrdistmin = np.mean(coeffs[:, i]) - thrdist
         thrdistmax = np.mean(coeffs[:, i]) + thrdist
         # test for how many points lie within 3 std dev of mean
-        culledcoeffs = coeffs[(coeffs[:, i] > thrdistmin) & \
-                (coeffs[:, i] < thrdistmax), i]
+        culledcoeffs = coeffs[
+            (coeffs[:, i] > thrdistmin) & (coeffs[:, i] < thrdistmax), i]
         if len(culledcoeffs) > 10:
             coefffitness[i] = utils.ks(culledcoeffs)
         # else 0 (see coefffitness definition)

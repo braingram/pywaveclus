@@ -4,21 +4,28 @@ import simple
 import cubic
 
 
-def extract_from_config(cfg):
-    method = cfg.get('extract', 'method')
+def extract_from_kwargs(**kwargs):
+    method = kwargs.get('method', 'simple')
     if method == 'simple':
-        pre = cfg.getint('detect', 'pre')
-        post = cfg.getint('detect', 'post')
-
-        return lambda readers, indices, ffunc: \
-                simple.simple(readers, indices, ffunc, pre, post)
+        pre = kwargs['pre']
+        post = kwargs['post']
+        return lambda data, indices: simple.simple(data, indices, pre, post)
     elif method == 'cubic':
-        pre = cfg.getint('detect', 'pre')
-        post = cfg.getint('detect', 'post')
-        direction = cfg.get('detect', 'direction')
-        oversample = cfg.getfloat('detect', 'oversample')
-
-        return lambda readers, indices, ffunc: cubic.cubic(readers, indices, \
-                ffunc, pre, post, direction, oversample)
+        raise NotImplementedError
+        pre = kwargs['pre']
+        post = kwargs['post']
+        direction = kwargs['direction']
+        oversample = kwargs['oversample']
+        return lambda data, indices: cubic.cubic(
+            data, indices, pre, post, direction, oversample)
     else:
-        raise ValueError("Unknown extract method: %s" % method)
+        raise ValueError('Unknown extract method: %s' % method)
+    pass
+
+
+def extract_from_config(cfg, section='extract'):
+    kwargs = {}
+    for k in ('method', 'pre', 'post', 'direction', 'oversample'):
+        if cfg.has_option(section, k):
+            kwargs[k] = cfg.get(section, k)
+    return extract_from_kwargs(**kwargs)

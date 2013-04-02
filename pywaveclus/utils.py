@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-import contextlib
 import logging
-import os
-import time
 import sys
 
 import numpy as np
@@ -67,19 +64,6 @@ def error(string, exception=Exception):
     raise exception(string)
 
 
-@contextlib.contextmanager
-def waiting_lock_dir(lock_dir, delay=1):
-    while os.path.exists(lock_dir):
-        logging.info("Found lock directory, waiting to recheck in %d..." % \
-                delay)
-        time.sleep(delay)
-    os.makedirs(lock_dir)
-    try:
-        yield
-    finally:
-        os.rmdir(lock_dir)
-
-
 def parse_value(string, default, tmin, tmax, ttype):
     if string.strip() == '':
         return ttype(default)
@@ -127,33 +111,9 @@ def parse_time_range(timerange, tmin, tmax, ttype=int):
     end = min(end, tmax)
 
     if start >= end:
-        raise ValueError("time range start >= end: %s [%i:%i]" % \
-                (timerange, start, end))
+        raise ValueError("time range start >= end: %s [%i:%i]" %
+                         (timerange, start, end))
     return start, end
-
-
-def old_parse_time_range(timerange, minVal, maxVal, toVal=int):
-    if timerange.strip() == '':
-        return minVal, maxVal
-    elif ':' in timerange:
-        tokens = timerange.split(':')
-        assert len(tokens) == 2, "Invalid timerange[%s]" % timerange
-        start = tokens[0]
-        end = tokens[1]
-    else:
-        start = str(minVal)
-        end = timerange
-
-    try:
-        startVal = toVal(start)
-    except Exception as E:
-        raise ValueError("Count not convert %s to %s: %s" % (start, toVal, E))
-    try:
-        endVal = toVal(end)
-    except Exception as E:
-        raise ValueError("Count not convert %s to %s: %s" % (end, toVal, E))
-
-    return max(startVal, minVal), min(endVal, maxVal)
 
 
 def find_extreme(direction):
@@ -165,3 +125,42 @@ def find_extreme(direction):
         return lambda x: np.abs(x).argmax()
     else:
         raise ValueError("Unknown direction [%s] for find_extreme" % direction)
+
+
+def find_crossings(data, threshold, direction='neg'):
+    """
+    Find the sub/super-threshold indices of data
+
+    Parameters
+    ----------
+    data : 1d array
+        Datapoints
+
+    threshold: float
+        Threshold (possibly calculated using calculate_threshold)
+        Must be positive
+
+    direction: string
+        Must be one of the following:
+            'pos' : find points more positive than threshold
+            'neg' : find points more negative than -threshold
+            'both': find points > threshold or < -threshold
+
+    Returns
+    -------
+    crossings : 1d array
+        Indices in data that cross the threshold
+    """
+    assert direction in ['pos', 'neg', 'both'], \
+        "Unknown direction[%s]" % direction
+    assert threshold > 0, "Threshold[%d] must be > 0" % threshold
+    if type(data) != np.ndarray:
+        data = np.array(data)
+
+    if direction == 'pos':
+        return np.where(data > threshold)[0]
+    if direction == 'neg':
+        return np.where(data < -threshold)[0]
+    if direction == 'both':
+        return np.union1d(np.where(data > threshold)[0],
+                          np.where(data < -threshold)[0])

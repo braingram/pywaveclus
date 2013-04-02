@@ -1,71 +1,34 @@
 #!/usr/bin/env python
 
 import klustakwik
-import skl
-import spc
+#import skl
+#import spc
 
-from .. import dsp
-
-__all__ = ['klustakwik', 'skl', 'spc']
+__all__ = ['klustakwik']
 
 
-def cluster_from_config(cfg):
-    method = cfg.get('cluster', 'method')
-
-    if method == 'spc':
-        raise NotImplemented("SPC cannot handle new 'adjacent files'")
-        nfeatures = cfg.getint('cluster', 'nfeatures')
-        levels = cfg.getint('cluster', 'levels')
-        wtype = cfg.get('cluster', 'wavelet')
-        nclusters = cfg.getint('cluster', 'nclusters')
-        nnoise = cfg.getint('cluster', 'nnoise')
-        minspikes = cfg.getint('cluster', 'minspikes')
-
-        return lambda x: spc.cluster(dsp.wavelet.features(x, nfeatures, \
-                levels, wavelet=wtype), nclusters=nclusters, \
-                nnoiseclusters=nnoise)
-    elif method == 'klustakwik':
-        nfeatures = cfg.getint('cluster', 'nfeatures')
-        minclusters = cfg.getint('cluster', 'minclusters')
-        maxclusters = cfg.getint('cluster', 'maxclusters')
-        ftype = cfg.get('cluster', 'featuretype')
-        separate = cfg.get('cluster', 'separate')
-        pre = cfg.getint('detect', 'pre')
-        minspikes = cfg.getint('cluster', 'minspikes')
-        if separate == 'peak':
-            separate = True
-        else:
-            separate = False
-
-        return lambda x: klustakwik.cluster(x, nfeatures, ftype, \
-                minclusters, maxclusters, separate, pre, minspikes)
-    elif method == 'kmeans':
-        nfeatures = cfg.getint('cluster', 'nfeatures')
-        ftype = cfg.get('cluster', 'featuretype')
-        nclusters = cfg.getint('cluster', 'nclusters')
-        separate = cfg.get('cluster', 'separate')
-        pre = cfg.getint('detect', 'pre')
-        minspikes = cfg.getint('cluster', 'minspikes')
-        if separate == 'peak':
-            separate = True
-        else:
-            separate = False
-        return lambda x: skl.cluster(x, nfeatures, ftype, nclusters, \
-                separate, pre, minspikes)
-    elif method == 'gmm':
-        nfeatures = cfg.getint('cluster', 'nfeatures')
-        ftype = cfg.get('cluster', 'featuretype')
-        nclusters = cfg.getint('cluster', 'nclusters')
-        separate = cfg.get('cluster', 'separate')
-        pre = cfg.getint('detect', 'pre')
-        minspikes = cfg.getint('cluster', 'minspikes')
-        cvtype = cfg.get('cluster', 'cvtype')
-        if separate == 'peak':
-            separate = True
-        else:
-            separate = False
-        return lambda x: skl.gmm(x, nfeatures, ftype, nclusters, \
-                separate, pre, minspikes, cvtype)
-
+def cluster_from_kwargs(**kwargs):
+    method = kwargs.get('method', 'klustakwik')
+    if method == 'klustakwik':
+        nf = kwargs['nfeatures']
+        minc = kwargs['minclusters']
+        maxc = kwargs['maxclusters']
+        ft = kwargs['featuretype']
+        sep = (kwargs['separate'] == 'peak')
+        pre = kwargs['pre']
+        mins = kwargs['minspikes']
+        return lambda x: klustakwik.cluster(x, nf, ft, minc, maxc,
+                                            sep, pre, mins)
+    elif method in ('spc', 'kmeans', 'gmm'):
+        raise NotImplementedError
     else:
-        raise ValueError("Unknown cluster method: %s" % method)
+        raise ValueError('Unknown cluster method: %s' % method)
+
+
+def cluster_from_config(cfg, section='cluster'):
+    kwargs = {}
+    for k in ('method', 'nfeatures', 'minclusters', 'maxclusters',
+              'featuretype', 'separate', 'pre', 'minspikes'):
+        if cfg.has_option(section, k):
+            kwargs[k] = cfg.get(section, k)
+    return cluster_from_kwargs(**kwargs)
