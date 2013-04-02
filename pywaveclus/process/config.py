@@ -22,15 +22,6 @@ dtype: f8
 start: 0.0
 stop: 1.0
 
-[ica]
-filename = ica.p
-method = random
-sargs = 102400
-ncomponents = 32
-count = 3
-stdthreshold = 2
-threshold = 0.1
-
 [filter]
 method: wavelet
 minlvl: 4

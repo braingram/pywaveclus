@@ -16,34 +16,28 @@ from ... import probes
 import icapp
 
 
-def position_sorted(fns, ptype, indexre):
-    to_pos = probes.lookup_converter_function(ptype, 'tdt', 'pos')
-    return sorted(fns, key=lambda fn: \
-            to_pos(int(re.findall(indexre, os.path.basename(fn))[0])))
-
-
 def to_int(number, maximum):
     if number is None:
         return maximum
     elif isinstance(number, float):
         assert (number >= 0) and (number <= 1.0), \
-                "to_int only accepts 0<=[%s]<=1.0" % number
+            "to_int only accepts 0<=[%s]<=1.0" % number
         return int(number * maximum)
     elif isinstance(number, int):
         return number
     else:
-        raise TypeError("Invalid Type[%s:%s] for to_int" % \
-                (type(number), number))
+        raise TypeError("Invalid Type[%s:%s] for to_int" %
+                        (type(number), number))
 
 
 class Reader(icapp.fio.MultiAudioFile):
-    def __init__(self, filenames=None, probetype='nna', \
-            indexre=r'_([0-9]+)\#*', chunksize=441000,
-            chunkoverlap=0, start=0, stop=None, **kwargs):
+    def __init__(self, filenames=None, probetype='nna',
+                 indexre=r'_([0-9]+)\#*', chunksize=441000,
+                 chunkoverlap=0, start=0, stop=None, **kwargs):
         assert filenames is not None, "No filenames supplied to reader"
-        # position sort filenames and create a the multiaudiofile
-        icapp.fio.MultiAudioFile.__init__(self, \
-                position_sorted(list(filenames), probetype, indexre), **kwargs)
+        # alphabetically sort filenames and create a the multiaudiofile
+        icapp.fio.MultiAudioFile.__init__(
+            self, sorted(list(filenames), **kwargs))
         self.probetype = probetype
         self.chunksize = chunksize
         self.chunkoverlap = chunkoverlap
@@ -53,10 +47,10 @@ class Reader(icapp.fio.MultiAudioFile):
         #    self.stop = len(self)
 
         # store channel index scheme conversion functions
-        self.tdt_to_pos = probes.lookup_converter_function(probetype, \
-                'tdt', 'pos')
-        self.pos_to_tdt = probes.lookup_converter_function(probetype, \
-                'pos', 'tdt')
+        self.tdt_to_pos = probes.lookup_converter_function(
+            probetype, 'tdt', 'pos')
+        self.pos_to_tdt = probes.lookup_converter_function(
+            probetype, 'pos', 'tdt')
 
     def seek_and_read(self, start, n):
         self.seek(start)
@@ -91,7 +85,7 @@ class Reader(icapp.fio.MultiAudioFile):
             while i + self.chunksize + overlap < stop:
                 if full:
                     yield self.read(self.chunksize + overlap), \
-                            i, i + self.chunksize + overlap
+                        i, i + self.chunksize + overlap
                 else:
                     yield self.read(self.chunksize + overlap)
                 i += self.chunksize
@@ -103,19 +97,13 @@ class Reader(icapp.fio.MultiAudioFile):
 
 
 class ICAReader(Reader):
-    def __init__(self, icafilename=None, icakwargs=None, **kwargs):
-        assert icafilename is not None, "No ica file supplied"
-        assert icakwargs is not None, "No ica kwargs supplied"
+    def __init__(self, info, **kwargs):
         Reader.__init__(self, **kwargs)
         self.read = self.raw_read
-        if not os.path.exists(icafilename):
-            mm, um, self._cm, count, threshold = \
-                    icapp.cmdline.process_src(self, **icakwargs)
-            icapp.fio.save_ica(icafilename, mm, um, \
-                    self._cm, self.filenames, count, threshold)
-            self.seek(0)
-        else:
-            self._cm = icapp.fio.load_ica(icafilename, key='cm')
+        assert info['fns'] == kwargs['filenames'], \
+            'ica fns must be the same (and ordered) as filenames: %s, %s' % \
+            (info['fns'], kwargs['filenames'])
+        self._cm = info['cm']
         self.read = self.ica_read
 
     def ica_read(self, n):

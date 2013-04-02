@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import cPickle as pickle
 
 import audio
 import hdf5
@@ -14,7 +15,7 @@ def to_number(string):
         return int(string)
 
 
-def get_reader(files, cfg, section='reader', ica_section='ica'):
+def get_reader(files, cfg, section='reader'):
     kwargs = {}
     kwargs['filenames'] = files
     kwargs['probetype'] = cfg.get(section, 'probetype')
@@ -30,28 +31,12 @@ def get_reader(files, cfg, section='reader', ica_section='ica'):
     if cfg.has_option(section, 'stop'):
         kwargs['stop'] = to_number(cfg.get(section, 'stop'))
 
-    kwargs['icafilename'] = cfg.get(ica_section, 'filename')
-    kwargs['icakwargs'] = {}
-    kwargs['icakwargs']['method'] = cfg.get(ica_section, 'method')
-
-    sargs = cfg.get(ica_section, 'sargs')
-    sargs += ' %s' % kwargs['start']
-    if 'stop' in kwargs:
-        sargs += ' %s' % kwargs['stop']
+    if cfg.has_option(section, 'icafilename'):
+        with open(cfg.get(section, 'icafilename'), 'r') as f:
+            ica_info = pickle.load(f)
+        return audio.ICAReader(ica_info, **kwargs)
     else:
-        sargs += ' 1.'
-
-    kwargs['icakwargs']['sargs'] = [to_number(i) for i in sargs.split()]
-    kwargs['icakwargs']['ncomponents'] = cfg.getint(ica_section, 'ncomponents')
-    kwargs['icakwargs']['count'] = cfg.getint(ica_section, 'count')
-    if cfg.has_option(ica_section, 'threshold'):
-        kwargs['icakwargs']['threshold'] = cfg.getfloat(ica_section, \
-                'threshold')
-    else:
-        kwargs['icakwargs']['threshold'] = None
-    kwargs['icakwargs']['stdthreshold'] = cfg.getfloat(ica_section, \
-            'stdthreshold')
-    return audio.ICAReader(**kwargs)
+        return audio.Reader(**kwargs)
 
 
 def get_writer(cfg, section='writer'):
