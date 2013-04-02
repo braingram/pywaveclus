@@ -7,7 +7,6 @@ import os
 import numpy as np
 
 from .. import data
-from .. import dsp
 from .. import detect
 from .. import cluster
 from .. import extract

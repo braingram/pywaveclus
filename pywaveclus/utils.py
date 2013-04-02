@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 
 import logging
+import os
 import sys
 
 import numpy as np
 import scipy.stats
+
+import cconfig
+
+
+def load_config(local=None):
+    bfn = os.path.join(os.path.dirname(
+        os.path.realpath(__file__)), 'pywavelus.ini')
+    ufn = '~/.pywaveclus'
+    local = 'pywaveclus.ini' if local is None else local
+    return cconfig.TypedConfig(base=bfn, user=ufn, local=local)
 
 
 def get_os():
