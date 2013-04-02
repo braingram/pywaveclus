@@ -8,7 +8,7 @@ import threshold
 __all__ = ['threshold']
 
 
-def detect_from_kwargs(baseline, **kwargs):
+def from_kwargs(baseline, **kwargs):
     method = kwargs.get('method', 'threshold')
     if method == 'threshold':
         direction = kwargs['direction']
@@ -30,10 +30,10 @@ def detect_from_kwargs(baseline, **kwargs):
         raise ValueError('Unknown detect method: %s' % method)
 
 
-def detect_from_config(baseline, cfg, section='detect'):
+def from_config(baseline, cfg, section='detect'):
     kwargs = {}
     for k in ('method', 'direction', 'ref', 'minwidth',
               'slop', 'nthresh', 'artifact'):
         if cfg.has_option(section, k):
             kwargs[k] = cfg.get(section, k)
-    return detect_from_kwargs(baseline, **kwargs)
+    return from_kwargs(baseline, **kwargs)

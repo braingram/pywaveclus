@@ -1,16 +1,38 @@
 #!/usr/bin/env python
 
-import config
 import logging
 import os
 
 import numpy as np
 
-from .. import data
-from .. import detect
-from .. import cluster
-from .. import extract
+from .. import ops
 from .. import utils
+
+
+def get_operations(fns, ica=None, cfg=None):
+    cfg = utils.load_config() if cfg is None else cfg
+
+    # reader
+    if ica is None:
+        reader = ops.reader.from_config(fns, cfg)
+    else:
+        reader = ops.reader.from_config(fns, cfg, ica)
+
+    # filt
+    ff = ops.filter.from_config(cfg)
+
+    # get baseline TODO
+    baseline = None
+
+    # detect
+    df = ops.detect.from_config(baseline, cfg)
+
+    # extract
+    ef = ops.extract.from_config(cfg)
+
+    # cluster
+    cf = ops.cluster.from_config(cfg)
+    return cfg, reader, ff, df, ef, cf
 
 
 def get_operations(customCfg=None, options=None):

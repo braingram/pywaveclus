@@ -7,7 +7,7 @@ import klustakwik
 __all__ = ['klustakwik']
 
 
-def cluster_from_kwargs(**kwargs):
+def from_kwargs(**kwargs):
     method = kwargs.get('method', 'klustakwik')
     if method == 'klustakwik':
         nf = kwargs['nfeatures']
@@ -25,10 +25,10 @@ def cluster_from_kwargs(**kwargs):
         raise ValueError('Unknown cluster method: %s' % method)
 
 
-def cluster_from_config(cfg, section='cluster'):
+def from_config(cfg, section='cluster'):
     kwargs = {}
     for k in ('method', 'nfeatures', 'minclusters', 'maxclusters',
               'featuretype', 'separate', 'pre', 'minspikes'):
         if cfg.has_option(section, k):
             kwargs[k] = cfg.get(section, k)
-    return cluster_from_kwargs(**kwargs)
+    return from_kwargs(**kwargs)

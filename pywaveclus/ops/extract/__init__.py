@@ -4,7 +4,7 @@ import simple
 import cubic
 
 
-def extract_from_kwargs(**kwargs):
+def from_kwargs(**kwargs):
     method = kwargs.get('method', 'simple')
     if method == 'simple':
         pre = kwargs['pre']
@@ -23,9 +23,9 @@ def extract_from_kwargs(**kwargs):
     pass
 
 
-def extract_from_config(cfg, section='extract'):
+def from_config(cfg, section='extract'):
     kwargs = {}
     for k in ('method', 'pre', 'post', 'direction', 'oversample'):
         if cfg.has_option(section, k):
             kwargs[k] = cfg.get(section, k)
-    return extract_from_kwargs(**kwargs)
+    return from_kwargs(**kwargs)

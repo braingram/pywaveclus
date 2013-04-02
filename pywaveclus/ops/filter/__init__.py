@@ -8,7 +8,7 @@ from . import wavelet
 __all__ = ['butter', 'wavelet']
 
 
-def filt_from_kwargs(**kwargs):
+def from_kwargs(**kwargs):
     method = kwargs.pop('method')
     if method == 'butter':
         flow = kwargs['low']
@@ -26,10 +26,10 @@ def filt_from_kwargs(**kwargs):
         raise ValueError('Unknown filt method: %s' % method)
 
 
-def filt_from_config(config, section='filter'):
+def from_config(config, section='filter'):
     kwargs = {}
     for k in ('method', 'low', 'high', 'samprate', 'order',
               'minlvl', 'maxlvl', 'wavelet', 'mode'):
         if config.has_option(section, k):
             kwargs[k] = config.get(section, k)
-    return filt_from_kwargs(**kwargs)
+    return from_kwargs(**kwargs)
