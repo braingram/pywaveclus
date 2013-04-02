@@ -35,24 +35,27 @@ def features_from_info(waveforms, info, pre):
     if 'mean' in info:
         return reconstruct_features(waveforms, info['mean'], \
                 info['components'])
-    elif 'nmean' in info:
-        # separated spikes
-        signs = np.sign(waveforms[:, 0, pre])
+    signs = np.sign(waveforms[:, 0, pre])
 
-        pi = np.where(signs == 1)[0]
-        ni = np.where(signs == -1)[0]
+    pi = np.where(signs == 1)[0]
+    ni = np.where(signs == -1)[0]
 
-        pf = reconstruct_features(waveforms[pi], info['pmean'], \
-                info['pcomponents'])
+    f = None
+    if 'nmean' in info:
         nf = reconstruct_features(waveforms[ni], info['nmean'], \
                 info['ncomponents'])
-
-        f = np.zeros((pf.shape[0] + nf.shape[0], pf.shape[1]), dtype=pf.dtype)
-        f[pi] = pf
+        if f is None:
+            f = np.zeros((len(waveforms), nf.shape[1]), dtype=nf.dtype)
         f[ni] = nf
-        return f
-    else:
-        raise ValueError("Invalid info: %s" % info)
+    if 'pmean' in info:
+        pf = reconstruct_features(waveforms[pi], info['pmean'], \
+                info['pcomponents'])
+        if f is None:
+            f = np.zeros((len(waveforms), pf.shape[1]), dtype=pf.dtype)
+        f[pi] = pf
+    if f is None:
+        raise Exception("Cannot reconstruct features")
+    return f
 
 
 def features(waveforms, nfeatures=3, usesaved=False):
