@@ -21,8 +21,10 @@ def get_operations(fns, ica=None, cfg=None):
     # filt
     ff = ops.filter.from_config(cfg)
 
-    # get baseline TODO
-    baseline = None
+    # get baseline
+    bf = ops.baseline.from_config(cfg)
+    baseline = ff(bf(reader))
+    reader.seek(0)
 
     # detect
     df = ops.detect.from_config(baseline, cfg)
@@ -35,33 +37,15 @@ def get_operations(fns, ica=None, cfg=None):
     return cfg, reader, ff, df, ef, cf
 
 
-def get_operations(customCfg=None, options=None):
-    """
-    fd = filt(data)
-    sis, sws = detect(fd)
-    # remove chunk overlap spikes
-    clusters, ... = cluster(sws)
-    """
-    cfg = config.load(customCfg)
-    cfg.read_commandline(options)
-
-    # reader
-    reader = data.reader_from_config(cfg)
-
-    # filt
-    ffunc = dsp.filt_from_config(cfg)
-
-    # detect
-    dfunc = detect.detect_from_config(reader, ffunc, cfg)
-    # TODO remove spikes in chunk overlap
-
-    # extract ? part of detect ?
-    efunc = extract.extract_from_config(cfg)
-
-    # cluster
-    cfunc = cluster.cluster_from_config(cfg)
-
-    return cfg, reader, ffunc, dfunc, efunc, cfunc
+def process_file(cfg, reader, ff, df, ef, cf):
+    start, end = utils.parse_time_range(
+        cfg.get('main',  'timerange'), 0, len(reader))
+    for chunk, cs, ce in reader.chunk(start, end):
+        # TODO chunk is a 2D array!!
+        fd = ff(chunk)
+        sis = df(fd)
+        sws = ef(sis)
+        sd = [(si + cs, sw) for (si, sw) in zip(sis, sws) if (sw is not None)]
 
 
 def process_file(customCfg=None, options=None):

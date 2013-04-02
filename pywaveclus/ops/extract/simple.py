@@ -5,11 +5,14 @@ def simple(data, indices, pre, post):
     waves = []
     for i in indices:
         if (i - pre < 0) or (i + post > data.size):
-            continue
-        wave = data[i - pre: i + post]
-        if len(data) == pre + post:
-            waves.append(wave)
-        del wave
+            waves.append(None)
+        else:
+            wave = data[i - pre: i + post]
+            if len(data) == pre + post:
+                waves.append(wave)
+            else:
+                waves.append(None)
+            del wave
     return waves
 
 
