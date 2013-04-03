@@ -16,7 +16,7 @@ class Reader(icapp.fio.MultiAudioFile):
         overlap = self._chunkoverlap if overlap is None else overlap
         for (s, e) in utils.chunk(end - start, size, overlap):
             self.seek(s + start)
-            yield self.read_frames(e - s), s + start, e + start
+            yield self.read(e - s), s + start, e + start
 
 
 class ICAReader(Reader):
