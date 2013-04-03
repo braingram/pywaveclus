@@ -5,8 +5,8 @@ import os
 
 import numpy as np
 
-from .. import ops
-from .. import utils
+from . import ops
+from . import utils
 
 
 def get_operations(fns, ica=None, cfg=None):

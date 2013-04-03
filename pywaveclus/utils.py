@@ -12,10 +12,10 @@ import cconfig
 
 def load_config(local=None):
     bfn = os.path.join(os.path.dirname(
-        os.path.realpath(__file__)), 'pywavelus.ini')
+        os.path.realpath(__file__)), 'pywaveclus.ini')
     ufn = '~/.pywaveclus'
     local = 'pywaveclus.ini' if local is None else local
-    return cconfig.TypedConfig(base=bfn, user=ufn, local=local)
+    return cconfig.TypedConfig(base=open(bfn), user=ufn, local=local)
 
 
 def get_os():

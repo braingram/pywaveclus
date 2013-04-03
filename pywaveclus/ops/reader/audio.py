@@ -7,9 +7,9 @@ from ... import utils
 
 class Reader(icapp.fio.MultiAudioFile):
     def __init__(self, filenames, **kwargs):
+        self._chunksize = kwargs.pop('chunksize', 441000)
+        self._chunkoverlap = kwargs.pop('chunkoverlap', 0)
         icapp.fio.MultiAudioFile.__init__(self, filenames, **kwargs)
-        self._chunksize = kwargs.get('chunksize', 441000)
-        self._chunkoverlap = kwargs.get('chunkoverlap', 0)
 
     def chunk(self, start, end, size=None, overlap=None):
         size = self._chunksize if size is None else size
