@@ -52,7 +52,7 @@ def process_file(cfg, reader, ff, df, ef, cf):
             fd = ff(ch)
             # get potential spikes
             sis = [i for i in df(chi, fd) if (i - pre) < (end - overlap)]
-            sws = ef(sis)  # get waveforms
+            sws = ef(fd, sis)  # get waveforms
             sd[chi] += [(si + cs, sw) for (si, sw) in
                         zip(sis, sws) if (sw is not None)]
     cd = {}
