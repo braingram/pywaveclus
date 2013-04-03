@@ -40,15 +40,38 @@ def get_operations(fns, ica=None, cfg=None):
 def process_file(cfg, reader, ff, df, ef, cf):
     start, end = utils.parse_time_range(
         cfg.get('main',  'timerange'), 0, len(reader))
+    sd = dict([(i, []) for i in xrange(reader.nchan)])
+    overlap = reader._chunkoverlap
+    pre = cfg.get('extract', 'pre')
+    # this may take up too much memory
+    # if so, write inds & waves to disk as they are found
     for chunk, cs, ce in reader.chunk(start, end):
-        # TODO chunk is a 2D array!!
-        fd = ff(chunk)
-        sis = df(fd)
-        sws = ef(sis)
-        sd = [(si + cs, sw) for (si, sw) in zip(sis, sws) if (sw is not None)]
+        # chunk is a 2D array, TODO parallel here?
+        for (chi, ch) in enumerate(chunk):
+            fd = ff(ch)
+            # get potential spikes
+            sis = [i for i in df(fd) if (i - pre) < (end - overlap)]
+            sws = ef(sis)  # get waveforms
+            sd[chi] += [(si + cs, sw) for (si, sw) in
+                        zip(sis, sws) if (sw is not None)]
+    cd = {}
+    for chi in sd:
+        # unzip
+        sis, sws = zip(*sd[chi])
+        clusters, info = cf(sws)
+
+        d = {}
+        d['filename'] = reader.filenames[chi]
+        d['index'] = chi
+        d['indices'] = sis
+        d['waveforms'] = sws
+        d['clusters'] = clusters
+        d['cluster_info'] = info
+        cd[chi] = d
+    return cd
 
 
-def process_file(customCfg=None, options=None):
+def old_process_file(customCfg=None, options=None):
     cfg, reader, ffunc, dfunc, efunc, cfunc = \
             get_operations(customCfg, options)
 
