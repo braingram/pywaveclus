@@ -50,7 +50,7 @@ def process_file(cfg, reader, ff, df, ef, cf):
         for (chi, ch) in enumerate(chunk):
             fd = ff(ch)
             # get potential spikes
-            sis = [i for i in df(fd) if (i - pre) < (end - overlap)]
+            sis = [i for i in df(chi, fd) if (i - pre) < (end - overlap)]
             sws = ef(sis)  # get waveforms
             sd[chi] += [(si + cs, sw) for (si, sw) in
                         zip(sis, sws) if (sw is not None)]

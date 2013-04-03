@@ -16,14 +16,14 @@ def from_kwargs(baseline, **kwargs):
         minwidth = kwargs['minwidth']
         slop = kwargs['slop']
         n = kwargs['nthresh']
-        T = threshold.calculate_threshold(baseline, n)
-        AT = T / float(n) * kwargs['artifact']
+        T = [threshold.calculate_threshold(b, n) for b in baseline]
+        AT = [t / float(n) * kwargs['artifact'] for t in T]
         logging.debug("Found threshold: %s" % T)
         logging.debug("Found artifact threshold: %s" % AT)
         if T == 0.:
             return lambda x: ([], [])
-        return lambda x: threshold.find_spikes(
-            x, T, AT, direction, ref, minwidth, slop)
+        return lambda i, x: threshold.find_spikes(
+            x, T[i], AT[i], direction, ref, minwidth, slop)
     elif method == 'neo':
         raise NotImplementedError
     else:
