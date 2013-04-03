@@ -8,7 +8,7 @@ def simple(data, indices, pre, post):
             waves.append(None)
         else:
             wave = data[i - pre: i + post]
-            if len(data) == pre + post:
+            if len(wave) == (pre + post):
                 waves.append(wave)
             else:
                 waves.append(None)

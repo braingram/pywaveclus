@@ -25,6 +25,12 @@ def from_kwargs(baseline, **kwargs):
         info['thresholds'] = T
         if T == 0.:
             return lambda x: ([], []), info
+
+        def f(i, x):
+            return threshold.find_spikes(
+                x, T[i], AT[i], direction, ref, minwidth, slop)
+
+        return f, info
         return lambda i, x: threshold.find_spikes(
             x, T[i], AT[i], direction, ref, minwidth, slop), info
     elif method == 'neo':

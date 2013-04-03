@@ -67,6 +67,8 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     minclusters: 3
     maxclusters: 5
     """
+    if len(waveforms) < minspikes:
+        return np.zeros(len(waveforms)), {}
     if separate:
         # separate waveforms into + and -, cluster separately
         waveforms = np.array(waveforms)
@@ -132,8 +134,6 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
         return remove_empty(clusters), info
 
-    if len(waveforms) < minspikes:
-        return np.zeros(len(waveforms)), {}
     tempdir = tempfile.mkdtemp(dir=tmp, suffix='_pywaveclus')
 
     datafile = "/".join((tempdir, "k_input.fet.1"))

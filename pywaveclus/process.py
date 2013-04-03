@@ -51,14 +51,22 @@ def process_file(cfg, reader, ff, df, ef, cf):
         for (chi, ch) in enumerate(chunk):
             fd = ff(ch)
             # get potential spikes
-            sis = [i for i in df(chi, fd) if (i - pre) < (end - overlap)]
+            psis = df(chi, fd)
+            sis = [i for i in psis if (i - pre) < (end - overlap)]
             sws = ef(fd, sis)  # get waveforms
-            sd[chi] += [(si + cs, sw) for (si, sw) in
-                        zip(sis, sws) if (sw is not None)]
+            chsd = [(si + cs, sw) for (si, sw) in
+                    zip(sis, sws) if (sw is not None)]
+            sd[chi] += chsd
+            #sd[chi] += [(si + cs, sw) for (si, sw) in
+            #            zip(sis, sws) if (sw is not None)]
     cd = {}
     for chi in sd:
         # unzip
-        sis, sws = zip(*sd[chi])
+        if len(sd[chi]):
+            sis, sws = zip(*sd[chi])
+        else:
+            sis = []
+            sws = []
         clusters, info = cf(sws)
 
         d = {}
