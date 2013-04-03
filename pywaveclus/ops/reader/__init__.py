@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import audio
+from . import audio
 
 __all__ = ['audio']
 

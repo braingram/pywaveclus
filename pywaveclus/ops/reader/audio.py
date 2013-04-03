@@ -2,12 +2,12 @@
 
 import icapp
 
-from .. import utils
+from ... import utils
 
 
 class Reader(icapp.fio.MultiAudioFile):
     def __init__(self, filenames, **kwargs):
-        Reader.__init__(self, **kwargs)
+        icapp.fio.MultiAudioFile.__init__(self, filenames, **kwargs)
         self._chunksize = kwargs.get('chunksize', 441000)
         self._chunkoverlap = kwargs.get('chunkoverlap', 0)
 
