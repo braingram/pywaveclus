@@ -11,30 +11,31 @@ from . import utils
 
 def get_operations(fns, ica=None, cfg=None):
     cfg = utils.load_config() if cfg is None else cfg
+    info = {}
 
     # reader
     if ica is None:
-        reader = ops.reader.from_config(fns, cfg)
+        reader, info['reader'] = ops.reader.from_config(fns, cfg)
     else:
-        reader = ops.reader.from_config(fns, cfg, ica)
+        reader, info['reader'] = ops.reader.from_config(fns, cfg, ica)
 
     # filt
-    ff = ops.filter.from_config(cfg)
+    ff, info['filter'] = ops.filter.from_config(cfg)
 
     # get baseline
-    bf = ops.baseline.from_config(cfg)
+    bf, info['baseline'] = ops.baseline.from_config(cfg)
     baseline = ff(bf(reader))
     reader.seek(0)
 
     # detect
-    df = ops.detect.from_config(baseline, cfg)
+    df, info['detect'] = ops.detect.from_config(baseline, cfg)
 
     # extract
-    ef = ops.extract.from_config(cfg)
+    ef, info['extract'] = ops.extract.from_config(cfg)
 
     # cluster
-    cf = ops.cluster.from_config(cfg)
-    return cfg, reader, ff, df, ef, cf
+    cf, info['cluster'] = ops.cluster.from_config(cfg)
+    return info, cfg, reader, ff, df, ef, cf
 
 
 def process_file(cfg, reader, ff, df, ef, cf):

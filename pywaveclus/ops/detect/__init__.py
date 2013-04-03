@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import logging
 
 #import neo
@@ -11,6 +12,7 @@ __all__ = ['threshold']
 def from_kwargs(baseline, **kwargs):
     method = kwargs.get('method', 'threshold')
     if method == 'threshold':
+        info = copy.deepcopy(kwargs)
         direction = kwargs['direction']
         ref = kwargs['ref']
         minwidth = kwargs['minwidth']
@@ -20,10 +22,11 @@ def from_kwargs(baseline, **kwargs):
         AT = [t / float(n) * kwargs['artifact'] for t in T]
         logging.debug("Found threshold: %s" % T)
         logging.debug("Found artifact threshold: %s" % AT)
+        info['thresholds'] = T
         if T == 0.:
-            return lambda x: ([], [])
+            return lambda x: ([], []), info
         return lambda i, x: threshold.find_spikes(
-            x, T[i], AT[i], direction, ref, minwidth, slop)
+            x, T[i], AT[i], direction, ref, minwidth, slop), info
     elif method == 'neo':
         raise NotImplementedError
     else:

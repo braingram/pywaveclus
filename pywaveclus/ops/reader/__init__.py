@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import copy
+
 from . import audio
 
 __all__ = ['audio']
@@ -7,9 +9,13 @@ __all__ = ['audio']
 
 def from_kwargs(filenames, *args, **kwargs):
     if len(args):
-        return audio.ICAReader(filenames, *args, **kwargs)
+        info = copy.deepcopy(kwargs)
+        info['ica'] = True
+        return audio.ICAReader(filenames, *args, **kwargs), info
     else:
-        return audio.Reader(filenames, **kwargs)
+        info = copy.deepcopy(kwargs)
+        info['ica'] = False
+        return audio.Reader(filenames, **kwargs), info
 
 
 def from_config(filenames, cfg, *args, **kwargs):
