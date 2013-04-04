@@ -8,6 +8,7 @@ __all__ = ['hdf5']
 
 
 def from_kwargs(filenames, *args, **kwargs):
+    raise NotImplementedError
     if len(args):
         info = copy.deepcopy(kwargs)
         info['ica'] = True
@@ -19,6 +20,7 @@ def from_kwargs(filenames, *args, **kwargs):
 
 
 def from_config(filenames, cfg, *args, **kwargs):
+    raise NotImplementedError
     s = kwargs.get('section', 'reader')
     for k in ('dtype', 'chunksize', 'chunkoverlap'):
         kwargs[k] = cfg.get(s, k)
