@@ -38,9 +38,10 @@ def get_operations(fns, ica=None, cfg=None):
     return info, cfg, reader, ff, df, ef, cf
 
 
-def process_file(cfg, reader, ff, df, ef, cf):
+def process_file(cfg, reader, ff, df, ef, cf, store):
     start, end = utils.parse_time_range(
         cfg.get('main',  'timerange'), 0, len(reader))
+    store.save_timerange(start, end)
     sd = dict([(i, []) for i in xrange(reader.nchan)])
     overlap = reader._chunkoverlap
     pre = cfg.get('extract', 'pre')
@@ -56,28 +57,31 @@ def process_file(cfg, reader, ff, df, ef, cf):
             sws = ef(fd, sis)  # get waveforms
             chsd = [(si + cs, sw) for (si, sw) in
                     zip(sis, sws) if (sw is not None)]
-            sd[chi] += chsd
+            sd[chi] = chsd
             #sd[chi] += [(si + cs, sw) for (si, sw) in
             #            zip(sis, sws) if (sw is not None)]
-    cd = {}
-    for chi in sd:
-        # unzip
-        if len(sd[chi]):
+        # write to file and cleanup
+        for chi in sd:
             sis, sws = zip(*sd[chi])
-        else:
-            sis = []
-            sws = []
+            store.create_spikes(chi, sis, sws)
+            del sws
+            sd[chi] = []
+    for chi in sd:
+        sws = store.load_waves(chi)
         clusters, info = cf(sws)
+        store.update_spikes(chi, clusters)
+        store.save_cluster_info(chi, info)
+        store.save_filename(chi, reader.filenames[chi])
 
-        d = {}
-        d['filename'] = reader.filenames[chi]
-        d['index'] = chi
-        d['indices'] = sis
-        d['waveforms'] = sws
-        d['clusters'] = clusters
-        d['cluster_info'] = info
-        cd[chi] = d
-    return cd
+        #d = {}
+        #d['filename'] = reader.filenames[chi]
+        #d['index'] = chi
+        #d['indices'] = sis
+        #d['waveforms'] = sws
+        #d['clusters'] = clusters
+        #d['cluster_info'] = info
+        #cd[chi] = d
+    return store
 
 
 def old_process_file(customCfg=None, options=None):
