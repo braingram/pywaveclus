@@ -58,14 +58,16 @@ def process_file(cfg, reader, ff, df, ef, cf, store):
             chsd = [(si + cs, sw) for (si, sw) in
                     zip(sis, sws) if (sw is not None)]
             sd[chi] = chsd
+            del sws
             #sd[chi] += [(si + cs, sw) for (si, sw) in
             #            zip(sis, sws) if (sw is not None)]
         # write to file and cleanup
         for chi in sd:
-            sis, sws = zip(*sd[chi])
-            store.create_spikes(chi, sis, sws)
-            del sws
-            sd[chi] = []
+            if len(sd[chi]):
+                sis, sws = zip(*sd[chi])
+                store.create_spikes(chi, sis, sws)
+                del sws
+                sd[chi] = []
     for chi in sd:
         sws = store.load_waves(chi)
         clusters, info = cf(sws)
