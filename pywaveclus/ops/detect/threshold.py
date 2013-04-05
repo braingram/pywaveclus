@@ -54,7 +54,7 @@ def find_spikes(data, threshold, artifact, direction, ref, minwidth, slop):
                 pi = find_extreme(data[start:c]) + start
                 if abs(data[pi]) < artifact:
                     sis.append(pi)
-                end = c
+                    end = c
             start = crossings[i + 1]
 
     if (start > end):
