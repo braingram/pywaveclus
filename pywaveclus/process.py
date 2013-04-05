@@ -44,6 +44,7 @@ def process_file(cfg, reader, ff, df, ef, cf, store):
     store.save_timerange(start, end)
     sd = dict([(i, []) for i in xrange(reader.nchan)])
     overlap = reader._chunkoverlap
+    csize = reader._chunksize
     pre = cfg.get('extract', 'pre')
     # this may take up too much memory
     # if so, write inds & waves to disk as they are found
@@ -53,7 +54,7 @@ def process_file(cfg, reader, ff, df, ef, cf, store):
             fd = ff(ch)
             # get potential spikes
             psis = df(chi, fd)
-            sis = [i for i in psis if (i - pre) < (end - overlap)]
+            sis = [i for i in psis if (i - pre) < (csize - overlap)]
             sws = ef(fd, sis)  # get waveforms
             chsd = [(si + cs, sw) for (si, sw) in
                     zip(sis, sws) if (sw is not None)]
