@@ -1,12 +1,48 @@
 #!/usr/bin/env python
 
+import glob
 import logging
 import os
 
-import numpy as np
+import numpy
+#import numpy as np
+import tables
 
 from . import ops
 from . import utils
+
+
+def process_session(sdir, ofn='output.h5', full=False):
+    afdir = sdir + '/Audio Files'
+    assert os.path.exists(afdir)
+    fns = sorted([os.path.realpath(fn) for fn in glob.glob(afdir + '/input*')])
+    print "filenames:", fns
+
+    ica = None
+    ica_mm = sdir + '/mixingmatrix'
+    ica_um = sdir + '/unmixingmatrix'
+    if (os.path.exists(ica_mm) and os.path.exists(ica_um)):
+        mm = numpy.matrix(numpy.loadtxt(ica_mm))
+        um = numpy.matrix(numpy.loadtxt(ica_um))
+        cm = mm * um
+        ica = dict(cm=cm, fns=fns)
+        print "found ica"
+    else:
+        print "no ica found"
+
+    store = ops.store.hdf5.SpikeStorage(
+        tables.openFile(ofn, 'w'))
+
+    cfg = utils.load_config()
+    info, cfg, reader, ff, df, ef, cf = get_operations(fns, ica=ica, cfg=cfg)
+
+    store.save_info(info)
+    process_file(cfg, reader, ff, df, ef, cf, store)
+    #store.close()
+    if full:
+        return store, dict(cfg=cfg, reader=reader, fns=fns, ff=ff,
+                           df=df, ef=ef, cf=cf, info=info, ica=ica)
+    return store
 
 
 def get_operations(fns, ica=None, cfg=None):
