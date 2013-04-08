@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+
 import icapp
 
 from ... import utils
@@ -21,8 +23,10 @@ class Reader(icapp.fio.MultiAudioFile):
 
 class ICAReader(Reader):
     def __init__(self, filenames, ica_info, **kwargs):
-        assert ica_info['fns'] == filenames
-        Reader.__init__(self, ica_info['fns'], **kwargs)
+        for (icafn, fn) in zip(ica_info['fns'], filenames):
+            assert os.path.basename(icafn) == os.path.basename(fn)
+        #assert ica_info['fns'] == filenames
+        Reader.__init__(self, filenames, **kwargs)
         self._cm = ica_info['cm']
         # function swapping
         self.raw_read = self.read

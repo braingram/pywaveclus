@@ -2,6 +2,7 @@
 
 import glob
 import logging
+import cPickle as pickle
 import os
 import re
 
@@ -20,16 +21,23 @@ def process_session(sdir, ofn='output.h5', full=False):
     print "filenames:", fns
 
     ica = None
-    ica_mm = sdir + '/mixingmatrix'
-    ica_um = sdir + '/unmixingmatrix'
-    if (os.path.exists(ica_mm) and os.path.exists(ica_um)):
-        mm = numpy.matrix(numpy.loadtxt(ica_mm))
-        um = numpy.matrix(numpy.loadtxt(ica_um))
-        cm = mm * um
-        ica = dict(cm=cm, fns=fns)
+    ica_fn = sdir + '/ica.p'
+    if os.path.exists(ica_fn):
+        ica = pickle.load(open(ica_fn))
         print "found ica"
     else:
         print "no ica found"
+    #ica = None
+    #ica_mm = sdir + '/mixingmatrix'
+    #ica_um = sdir + '/unmixingmatrix'
+    #if (os.path.exists(ica_mm) and os.path.exists(ica_um)):
+    #    mm = numpy.matrix(numpy.loadtxt(ica_mm))
+    #    um = numpy.matrix(numpy.loadtxt(ica_um))
+    #    cm = mm * um
+    #    ica = dict(cm=cm, fns=fns)
+    #    print "found ica"
+    #else:
+    #    print "no ica found"
 
     store = ops.store.hdf5.SpikeStorage(
         tables.openFile(ofn, 'w'))
@@ -96,10 +104,10 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     pre = cfg.get('extract', 'pre')
     # this may take up too much memory
     # if so, write inds & waves to disk as they are found
-    for chunk, cs, ce in reader.chunk(start, end):
+    for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
         # chunk is a 2D array, TODO parallel here?
         for (chi, ch) in enumerate(chunk):
-            fd = ff(ch)
+            fd = ff(ch)  # time: 38%
             # get potential spikes
             psis = df(chi, fd)
             sis = [i for i in psis if (i - pre) < (csize - overlap)]
@@ -122,7 +130,7 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     info['clustering'] = {}
     for chi in sd:
         sws = store.load_waves(chi)
-        clusters, cinfo = cf(sws)
+        clusters, cinfo = cf(sws)  # time: 24%
         store.update_spikes(chi, clusters)
         info['clustering'][chi] = cinfo
         #store.save_cluster_info(chi, info)

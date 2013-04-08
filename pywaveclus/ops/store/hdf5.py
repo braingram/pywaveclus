@@ -103,7 +103,8 @@ class SpikeStorage(object):
         self.file.flush()
 
     def get_info(self):
-        f = tables.nodes.filenode.openNode(self._info_path, 'r')
+        f = tables.nodes.filenode.openNode(
+            self.file.getNode(self._info_path), 'r')
         d = pickle.load(f)
         f.close()
         return d
