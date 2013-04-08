@@ -3,6 +3,7 @@
 import glob
 import logging
 import os
+import re
 
 import numpy
 #import numpy as np
@@ -34,10 +35,21 @@ def process_session(sdir, ofn='output.h5', full=False):
         tables.openFile(ofn, 'w'))
 
     cfg = utils.load_config()
+    # make channel re-mapping function
+    indexre = cfg.get('main', 'indexre')
+    order = cfg.get('main', 'order')
+
+    def reorder(self, index):
+        fn = fns[index]
+        ms = re.findall(indexre, fn)
+        assert len(ms) == 1
+        i = int(ms[0])
+        return order[i]
+
     info, cfg, reader, ff, df, ef, cf = get_operations(fns, ica=ica, cfg=cfg)
 
-    store.save_info(info)
-    process_file(cfg, reader, ff, df, ef, cf, store)
+    process_file(info, cfg, reader, ff, df, ef, cf, store)
+    #store.save_info(info)  # do this in process_file
     #store.close()
     if full:
         return store, dict(cfg=cfg, reader=reader, fns=fns, ff=ff,
@@ -47,7 +59,7 @@ def process_session(sdir, ofn='output.h5', full=False):
 
 def get_operations(fns, ica=None, cfg=None):
     cfg = utils.load_config() if cfg is None else cfg
-    info = {}
+    info = dict(fns=fns, cfg=cfg.as_dict())
 
     # reader
     if ica is None:
@@ -74,10 +86,10 @@ def get_operations(fns, ica=None, cfg=None):
     return info, cfg, reader, ff, df, ef, cf
 
 
-def process_file(cfg, reader, ff, df, ef, cf, store):
+def process_file(info, cfg, reader, ff, df, ef, cf, store):
     start, end = utils.parse_time_range(
         cfg.get('main',  'timerange'), 0, len(reader))
-    store.save_timerange(start, end)
+    #store.save_timerange(start, end)
     sd = dict([(i, []) for i in xrange(reader.nchan)])
     overlap = reader._chunkoverlap
     csize = reader._chunksize
@@ -105,12 +117,16 @@ def process_file(cfg, reader, ff, df, ef, cf, store):
                 store.create_spikes(chi, sis, sws)
                 del sws
                 sd[chi] = []
+    # these channel indices won't necessarily be the same as before
+    # if channels where reordered (see cfg['main']['order'] and indexre)
+    info['clustering'] = {}
     for chi in sd:
         sws = store.load_waves(chi)
         clusters, info = cf(sws)
         store.update_spikes(chi, clusters)
-        store.save_cluster_info(chi, info)
-        store.save_filename(chi, reader.filenames[chi])
+        info['clustering'][chi] = info
+        #store.save_cluster_info(chi, info)
+        #store.save_filename(chi, reader.filenames[chi])
 
         #d = {}
         #d['filename'] = reader.filenames[chi]
@@ -120,6 +136,8 @@ def process_file(cfg, reader, ff, df, ef, cf, store):
         #d['clusters'] = clusters
         #d['cluster_info'] = info
         #cd[chi] = d
+    store.info = info
+    store.time_range = (start, end)
     return store
 
 
