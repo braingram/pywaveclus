@@ -29,13 +29,6 @@ class SpikeStorage(object):
         self._stdescription = None
         self._spikes_path = spikes_path
         self._info_path = info_path
-        #if self._spikes_path not in self.file:
-        #    s = self._spikes_path.split('/')
-        #    rp = '/'.join(s[:-1])
-        #    if (len(rp) == 0) or (rp[0] != '/'):
-        #        rp = '/' + rp
-        #    self.file.createGroup(rp, s[-1], createparents=True)
-        #self._spikes_group = file.getNode(self._spikes_path)
 
     def convert_channel_index(self, index):
         # convert the channel index from one numbering system to another
@@ -50,12 +43,8 @@ class SpikeStorage(object):
     def get_time_range(self):
         return self.file.getNode(self._spikes_path).getAttr('timerange')
 
-    time_range = property(get_time_range, set_time_range)
-
-    #def channel_index_to_node_path(self, chi, full=False):
-    #    if full:
-    #        return '%s/ch%i' % (self._spikes_path, chi)
-    #    return 'ch%i' % chi
+    time_range = property(get_time_range, set_time_range,
+                          doc="epoch time range [in audio samples]")
 
     def create_spikes(self, chi, sis, sws):
         if not len(sws):
@@ -69,11 +58,10 @@ class SpikeStorage(object):
                 wave = tables.Float64Col(shape=(len(sws[0])))
                 cluster = tables.Int8Col()
             self._stdescription = d
-        #nn = self.channel_index_to_node_path(chi)
-        #np = self.channel_index_to_node_path(chi, full=True)
         if self._spikes_path not in self.file:
             r, n = split_path(self._spikes_path)
-            n = self.file.createTable(r, n, self._stdescription)
+            n = self.file.createTable(r, n, self._stdescription,
+                                      createparents=True)
         else:
             n = self.file.getNode(self._spikes_path)
         for (si, sw) in zip(sis, sws):
@@ -87,8 +75,6 @@ class SpikeStorage(object):
     def load_waves(self, chi):
         return self.file.getNode(self._spikes_path).readWhere(
             'channel == chi', field='wave')
-        #n = self.file.getNode(self.channel_index_to_node_path(chi, full=True))
-        #return n.cols.wave[:]
 
     def update_spikes(self, chi, clusters):
         t = self.file.getNode(self._spikes_path)
@@ -97,21 +83,21 @@ class SpikeStorage(object):
             r['cluster'] = clusters[i]
             r.update()
         t.flush()
-        #n = self.file.getNode(self.channel_index_to_node_path(chi, full=True))
-        #assert len(n.cols.cluster) == len(clusters)
-        #n.cols.cluster[:] = clusters
+
+    def get_spikes(self):
+        return self.file.getNode(self._spikes_path)
+
+    spikes = property(get_spikes, doc="spike table")
 
     def set_info(self, info):
         # pickle dict
         if self._info_path in self.file:
             self.file.removeNode(self._info_path)
         r, n = split_path(self._info_path)
+        if r not in self.file:
+            rr, rn = split_path(r)
+            self.file.createGroup(rr, rn)
         f = tables.nodes.filenode.newNode(self.file, where=r, name=n)
-        #nn = '%s/info' % self._spikes_path
-        #if nn in self.file:
-        #    self.file.removeNode(nn)
-        #f = tables.nodes.filenode.newNode(
-        #    self.file, where=self._spikes_path, name='info')
         pickle.dump(info, f, protocol=2)
         f.close()
         self.file.flush()
@@ -122,8 +108,24 @@ class SpikeStorage(object):
         f.close()
         return d
 
-    info = property(get_info, set_info)
+    info = property(get_info, set_info, doc="spike processing info")
 
     def close(self):
         self.file.flush()
         self.file.close()
+
+    def copy(self, other):
+        """Copy a spike storage object"""
+        src = other.spikes
+        if self._spikes_path in self.file:
+            self.file.removeNode(self._spikes_path)
+        r, n = split_path(self._spikes_path)
+        dst = self.file.createTable(r, n, src.description,
+                                    createparents=True)
+        for r in src:
+            for a in src.colnames:
+                dst.row[a] = r[a]
+            dst.row.append()
+        dst.flush()
+        self.info = other.info
+        self.time_range = other.time_range

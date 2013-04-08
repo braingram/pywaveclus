@@ -122,9 +122,9 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     info['clustering'] = {}
     for chi in sd:
         sws = store.load_waves(chi)
-        clusters, info = cf(sws)
+        clusters, cinfo = cf(sws)
         store.update_spikes(chi, clusters)
-        info['clustering'][chi] = info
+        info['clustering'][chi] = cinfo
         #store.save_cluster_info(chi, info)
         #store.save_filename(chi, reader.filenames[chi])
 
