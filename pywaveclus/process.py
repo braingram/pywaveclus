@@ -54,6 +54,8 @@ def process_session(sdir, ofn='output.h5', full=False):
         i = int(ms[0])
         return order[i]
 
+    store.convert_channel_index = reorder
+
     info, cfg, reader, ff, df, ef, cf = get_operations(fns, ica=ica, cfg=cfg)
 
     process_file(info, cfg, reader, ff, df, ef, cf, store)
