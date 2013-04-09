@@ -82,6 +82,10 @@ hdfFile.close()
 if len(times) == 0:
     logging.debug("No spikes found")
     sys.exit(0)
+
+if (not bool(cfg.getint('main', 'plot'))):
+    sys.exit(0)
+
 # generate plots
 logging.debug("Plotting")
 
