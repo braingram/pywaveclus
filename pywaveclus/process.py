@@ -100,7 +100,7 @@ def get_operations(fns, ica=None, cfg=None):
 def process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs):
     fd = ff(ch)  # time: 38%
     # get potential spikes
-    psis = df(chi, fd)
+    psis = df(fd)
     sis = [i for i in psis if (i - pre) < (csize - overlap)]
     sws = ef(fd, sis)  # get waveforms
     return [(si + cs, sw) for (si, sw) in
@@ -111,16 +111,13 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     start, end = utils.parse_time_range(
         cfg.get('main',  'timerange'), 0, len(reader))
     #store.save_timerange(start, end)
-    sd = dict([(i, []) for i in xrange(reader.nchan)])
+    #sd = dict([(i, []) for i in xrange(reader.nchan)])
     overlap = reader._chunkoverlap
     csize = reader._chunksize
     pre = cfg.get('extract', 'pre')
     # this may take up too much memory
     # if so, write inds & waves to disk as they are found
 
-    def f(chi, ch):
-        return process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs)
-    parallel = False
     # the biggest problem with making this parallel is the inability to
     # pickle functions, the current library structure builds a set of
     # functions from a configuration (ff, df, ef...) all of which are
@@ -135,12 +132,13 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     #   df(i, d)
     # to to parallelize this, I could deal out each channels detect function
     # from the main process
+    parallel = True
     if parallel:
-        for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
+        for chunk, cs, ce in reader.chunk(start, end):
             #sd = joblib.Parallel(8)(
             #    joblib.delayed(f)(chi, ch) for (chi, ch) in enumerate(chunk))
-            sd = joblib.Parallel(2)(joblib.delayed(utils.process_chunk)(
-                chi, ch, ff, df, pre, csize, overlap, ef, cs) for
+            sd = joblib.Parallel(8)(joblib.delayed(process_chunk)(
+                chi, ch, ff, df[chi], pre, csize, overlap, ef, cs) for
                 (chi, ch) in enumerate(chunk))
             for (i, d) in enumerate(sd):
                 if len(d):
@@ -149,12 +147,13 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
                     del sws
             sd = None
     else:
+        sd = dict([(i, []) for i in xrange(reader.nchan)])
         for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
             # chunk is a 2D array, TODO parallel here?
             for (chi, ch) in enumerate(chunk):
                 fd = ff(ch)  # time: 38%
                 # get potential spikes
-                psis = df(chi, fd)
+                psis = df[chi](fd)
                 sis = [i for i in psis if (i - pre) < (csize - overlap)]
                 sws = ef(fd, sis)  # get waveforms
                 chsd = [(si + cs, sw) for (si, sw) in
@@ -173,127 +172,11 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     # these channel indices won't necessarily be the same as before
     # if channels where reordered (see cfg['main']['order'] and indexre)
     info['clustering'] = {}
-    for chi in sd:
+    for chi in xrange(reader.nchan):
         sws = store.load_waves(chi)
         clusters, cinfo = cf(sws)  # time: 24%
         store.update_spikes(chi, clusters)
         info['clustering'][chi] = cinfo
-        #store.save_cluster_info(chi, info)
-        #store.save_filename(chi, reader.filenames[chi])
-
-        #d = {}
-        #d['filename'] = reader.filenames[chi]
-        #d['index'] = chi
-        #d['indices'] = sis
-        #d['waveforms'] = sws
-        #d['clusters'] = clusters
-        #d['cluster_info'] = info
-        #cd[chi] = d
     store.info = info
     store.time_range = (start, end)
     return store
-
-
-def old_process_file(customCfg=None, options=None):
-    cfg, reader, ffunc, dfunc, efunc, cfunc = \
-            get_operations(customCfg, options)
-
-    outdir = cfg.get('main', 'outputdir').strip()
-    filename = cfg.get('main', 'filename')
-    if outdir == '':
-        outdir = os.path.dirname(os.path.abspath(filename)) + \
-                '/pyc_' + os.path.basename(filename)
-
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-    logging.root.addHandler( \
-            logging.FileHandler('%s/pyc.log' % outdir, mode='w'))
-
-    cfg.pretty_print(logging.debug)
-
-    csize = cfg.getint('reader', 'chunksize')
-    coverlap = cfg.getint('reader', 'chunkoverlap')
-
-    start, end = utils.parse_time_range( \
-            cfg.get('main', 'timerange'), 0, reader.nframes, int)
-    logging.debug("Timerange: %i to %i samples" % (start, end))
-    logging.debug("Chunk size %i, overlap %i" % (csize, coverlap))
-
-    pre = cfg.getint('detect', 'pre')
-    assert pre * 2 < coverlap, \
-            "chunk overlap[%i] must be more than 2*pre[%i]" % \
-            (coverlap, pre * 2)
-
-    #waveforms = None
-    indices = None
-    nspikes = 0
-    for chunk, chunkstart, chunkend in \
-            reader.chunk(start, end, csize, coverlap):
-        sis = dfunc(ffunc(chunk))
-        logging.debug("Found %i spikes between %i and %i" % \
-                (len(sis), chunkstart, chunkend))
-
-        sis = np.array(sis)
-        #sws = np.array(sws)
-
-        goodIs = np.where(sis < (csize + pre * 2.))[0]
-
-        if len(goodIs) == 0:
-            continue
-
-        # make times releative to first sample (audio time 0)
-        sis += chunkstart
-
-        nspikes += len(goodIs)
-
-        if indices is None:
-            indices = sis[goodIs]
-            #waveforms = sws[goodIs]
-        else:
-            indices = np.hstack((indices, sis[goodIs]))
-            #waveforms =  np.vstack((waveforms, sws[goodIs]))
-
-    # get waveforms from 'adjacent' channels
-    adjacentFiles = cfg.get('main', 'adjacentfiles')
-    logging.debug("adjacent files: %s" % adjacentFiles)
-    readers = [reader, ]
-    if adjacentFiles.strip() != '':
-        adjacentFiles = adjacentFiles.split()
-        readers = [reader, ]
-        for adjacentFile in adjacentFiles:
-            dtype = np.dtype(cfg.get('reader', 'dtype'))
-            lockdir = cfg.get('reader', 'lockdir')
-            if lockdir.strip() == '':
-                lockdir = None
-            ref = cfg.get('main', 'reference')
-            if ref.strip() != '':
-                readers.append(data.audio.ReferencedReader( \
-                        adjacentFile, ref, dtype, lockdir))
-            else:
-                readers.append(data.audio.Reader(adjacentFile, dtype, lockdir))
-            #readers.append(adj)
-            #for si in indices:
-            #    pass
-    logging.debug("%i spikes (by nspikes)" % nspikes)
-    if indices is None:
-        return cfg, [], [], [], {}
-    waveforms = np.array(efunc(readers, indices, ffunc))
-
-    logging.debug("%i spikes (by nspikes)" % nspikes)
-    if not (indices is None):
-        logging.debug("%i spikes (by indices)" % len(indices))
-    else:
-        logging.debug("0 spikes (by indices)")
-
-    if waveforms is None:
-        return cfg, [], [], [], {}
-    elif len(waveforms) < cfg.getint('cluster', 'minspikes'):
-        logging.warning("%i spikes less than minspikes [%i], " \
-                "assigning all to 1 cluster" % \
-                (len(waveforms), cfg.getint('cluster', 'minspikes')))
-        clusters = np.array([0] * len(waveforms))
-        return cfg, indices, waveforms, clusters, {}
-    else:
-        logging.debug("%i spikes before clustering" % len(indices))
-        clusters, info = cfunc(waveforms)
-        return cfg, indices, waveforms, clusters, info

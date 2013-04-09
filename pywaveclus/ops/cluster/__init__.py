@@ -7,6 +7,20 @@ import klustakwik
 __all__ = ['klustakwik']
 
 
+class Cluster(object):
+    def __new__(cls, f, args):
+        o = object.__new__(cls)
+        o.f = f
+        o.args = args
+        return o
+
+    def __getnewargs__(self):
+        return self.f, self.args
+
+    def __call__(self, d):
+        return self.f(d, *self.args)
+
+
 def from_kwargs(**kwargs):
     method = kwargs.get('method', 'klustakwik')
     if method == 'klustakwik':
@@ -17,6 +31,9 @@ def from_kwargs(**kwargs):
         sep = (kwargs['separate'] == 'peak')
         pre = kwargs['pre']
         mins = kwargs['minspikes']
+
+        return Cluster(klustakwik.cluster,
+                       (nf, ft, minc, maxc, sep, pre, mins)), kwargs
 
         def f(x):
             return klustakwik.cluster(x, nf, ft, minc, maxc, sep, pre, mins)

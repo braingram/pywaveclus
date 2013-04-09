@@ -4,11 +4,27 @@ import simple
 import cubic
 
 
+class Extract(object):
+    def __new__(cls, f, args):
+        o = object.__new__(cls)
+        o.f = f
+        o.args = args
+        return o
+
+    def __getnewargs__(self):
+        return self.f, self.args
+
+    def __call__(self, d, i):
+        return self.f(d, i, *self.args)
+
+
 def from_kwargs(**kwargs):
     method = kwargs.get('method', 'simple')
     if method == 'simple':
         pre = kwargs['pre']
         post = kwargs['post']
+
+        return Extract(simple.simple, (pre, post)), kwargs
 
         def f(d, i):
             return simple.simple(d, i, pre, post)

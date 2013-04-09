@@ -8,6 +8,20 @@ from . import wavelet
 __all__ = ['butter', 'wavelet']
 
 
+class Filter(object):
+    def __new__(cls, f, args):
+        o = object.__new__(cls)
+        o.f = f
+        o.args = args
+        return o
+
+    def __getnewargs__(self):
+        return self.f, self.args
+
+    def __call__(self, d):
+        return self.f(d, *self.args)
+
+
 def from_kwargs(**kwargs):
     method = kwargs.pop('method')
     if method == 'butter':
@@ -16,15 +30,19 @@ def from_kwargs(**kwargs):
         sr = kwargs['samprate']
         order = kwargs['order']
 
-        def f(x):
-            return butter.filt(x, flow, fhigh, sr, order)
-        return f, kwargs
+        return Filter(butter.filt, (flow, fhigh, sr, order)), kwargs
+
+        #def f(x):
+        #    return butter.filt(x, flow, fhigh, sr, order)
+        #return f, kwargs
         #return lambda x: butter.filt(x, flow, fhigh, sr, order), kwargs
     elif method == 'wavelet':
         minlvl = kwargs['minlvl']
         maxlvl = kwargs['maxlvl']
         wtype = kwargs['wavelet']
         mode = kwargs['mode']
+
+        return Filter(wavelet.filt, (maxlvl, wtype, mode, minlvl)), kwargs
 
         def f(x):
             return wavelet.filt(x, maxlvl, wtype, mode, minlvl)
