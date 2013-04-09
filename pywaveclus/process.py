@@ -6,6 +6,7 @@ import cPickle as pickle
 import os
 import re
 
+import joblib
 import numpy
 #import numpy as np
 import tables
@@ -96,6 +97,16 @@ def get_operations(fns, ica=None, cfg=None):
     return info, cfg, reader, ff, df, ef, cf
 
 
+def process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs):
+    fd = ff(ch)  # time: 38%
+    # get potential spikes
+    psis = df(chi, fd)
+    sis = [i for i in psis if (i - pre) < (csize - overlap)]
+    sws = ef(fd, sis)  # get waveforms
+    return [(si + cs, sw) for (si, sw) in
+            zip(sis, sws) if (sw is not None)]
+
+
 def process_file(info, cfg, reader, ff, df, ef, cf, store):
     start, end = utils.parse_time_range(
         cfg.get('main',  'timerange'), 0, len(reader))
@@ -106,27 +117,59 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     pre = cfg.get('extract', 'pre')
     # this may take up too much memory
     # if so, write inds & waves to disk as they are found
-    for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
-        # chunk is a 2D array, TODO parallel here?
-        for (chi, ch) in enumerate(chunk):
-            fd = ff(ch)  # time: 38%
-            # get potential spikes
-            psis = df(chi, fd)
-            sis = [i for i in psis if (i - pre) < (csize - overlap)]
-            sws = ef(fd, sis)  # get waveforms
-            chsd = [(si + cs, sw) for (si, sw) in
-                    zip(sis, sws) if (sw is not None)]
-            sd[chi] = chsd
-            del sws
-            #sd[chi] += [(si + cs, sw) for (si, sw) in
-            #            zip(sis, sws) if (sw is not None)]
-        # write to file and cleanup
-        for chi in sd:
-            if len(sd[chi]):
-                sis, sws = zip(*sd[chi])
-                store.create_spikes(chi, sis, sws)
+
+    def f(chi, ch):
+        return process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs)
+    parallel = False
+    # the biggest problem with making this parallel is the inability to
+    # pickle functions, the current library structure builds a set of
+    # functions from a configuration (ff, df, ef...) all of which are
+    # not pickleable
+    # to make this parallel I need to make these functions pickleable
+    # possibly I could define them as (callable) objects that get
+    # recreated in each process. This is straightforward for everything
+    # except detection which has channel specific thresholds
+    # A work-around for this would be to make detection follow the form of:
+    #   df(i)(d)
+    # instead of
+    #   df(i, d)
+    # to to parallelize this, I could deal out each channels detect function
+    # from the main process
+    if parallel:
+        for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
+            #sd = joblib.Parallel(8)(
+            #    joblib.delayed(f)(chi, ch) for (chi, ch) in enumerate(chunk))
+            sd = joblib.Parallel(2)(joblib.delayed(utils.process_chunk)(
+                chi, ch, ff, df, pre, csize, overlap, ef, cs) for
+                (chi, ch) in enumerate(chunk))
+            for (i, d) in enumerate(sd):
+                if len(d):
+                    sis, sws = zip(*d)
+                    store.create_spikes(i, sis, sws)
+                    del sws
+            sd = None
+    else:
+        for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
+            # chunk is a 2D array, TODO parallel here?
+            for (chi, ch) in enumerate(chunk):
+                fd = ff(ch)  # time: 38%
+                # get potential spikes
+                psis = df(chi, fd)
+                sis = [i for i in psis if (i - pre) < (csize - overlap)]
+                sws = ef(fd, sis)  # get waveforms
+                chsd = [(si + cs, sw) for (si, sw) in
+                        zip(sis, sws) if (sw is not None)]
+                sd[chi] = chsd
                 del sws
-                sd[chi] = []
+                #sd[chi] += [(si + cs, sw) for (si, sw) in
+                #            zip(sis, sws) if (sw is not None)]
+            # write to file and cleanup
+            for chi in sd:
+                if len(sd[chi]):
+                    sis, sws = zip(*sd[chi])
+                    store.create_spikes(chi, sis, sws)
+                    del sws
+                    sd[chi] = []
     # these channel indices won't necessarily be the same as before
     # if channels where reordered (see cfg['main']['order'] and indexre)
     info['clustering'] = {}

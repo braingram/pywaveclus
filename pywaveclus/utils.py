@@ -10,6 +10,16 @@ import scipy.stats
 import cconfig
 
 
+def process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs):
+    fd = ff(ch)  # time: 38%
+    # get potential spikes
+    psis = df(chi, fd)
+    sis = [i for i in psis if (i - pre) < (csize - overlap)]
+    sws = ef(fd, sis)  # get waveforms
+    return [(si + cs, sw) for (si, sw) in
+            zip(sis, sws) if (sw is not None)]
+
+
 def load_config(local=None):
     bfn = os.path.join(os.path.dirname(
         os.path.realpath(__file__)), 'pywaveclus.ini')
