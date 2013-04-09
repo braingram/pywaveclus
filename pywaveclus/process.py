@@ -100,8 +100,15 @@ def get_operations(fns, ica=None, cfg=None):
 def process_chunk(chi, ch, ff, df, pre, csize, overlap, ef, cs):
     fd = ff(ch)  # time: 38%
     # get potential spikes
-    psis = df(fd)
-    sis = [i for i in psis if (i - pre) < (csize - overlap)]
+    #sis = []
+    #for i in df(fd):
+    #    if (i - pre) < csize:
+    #        sis.append(i)
+    #    else:
+    #        print i, pre, csize, overlap
+    #psis = df(fd)
+    #sis = [i for i in psis if (i - pre) < (csize - overlap)]
+    sis = [i for i in df(fd) if (i - pre) < csize]
     sws = ef(fd, sis)  # get waveforms
     return [(si + cs, sw) for (si, sw) in
             zip(sis, sws) if (sw is not None)]

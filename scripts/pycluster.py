@@ -16,7 +16,7 @@ if len(sys.argv) > 2:
     ofn = sys.argv[2]
 
 store, info = pywaveclus.process.process_session(bdir, ofn, full=True)
-print "Session Info"
-for k, v in info.iteritems():
-    print '%s:\t%s' % (k, v)
+#print "Session Info"
+#for k, v in info.iteritems():
+#    print '%s:\t%s' % (k, v)
 store.close()
