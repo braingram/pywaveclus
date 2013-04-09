@@ -132,43 +132,18 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     #   df(i, d)
     # to to parallelize this, I could deal out each channels detect function
     # from the main process
-    parallel = True
-    if parallel:
-        for chunk, cs, ce in reader.chunk(start, end):
-            #sd = joblib.Parallel(8)(
-            #    joblib.delayed(f)(chi, ch) for (chi, ch) in enumerate(chunk))
-            sd = joblib.Parallel(8)(joblib.delayed(process_chunk)(
-                chi, ch, ff, df[chi], pre, csize, overlap, ef, cs) for
-                (chi, ch) in enumerate(chunk))
-            for (i, d) in enumerate(sd):
-                if len(d):
-                    sis, sws = zip(*d)
-                    store.create_spikes(i, sis, sws)
-                    del sws
-            sd = None
-    else:
-        sd = dict([(i, []) for i in xrange(reader.nchan)])
-        for chunk, cs, ce in reader.chunk(start, end):  # time: 30%
-            # chunk is a 2D array, TODO parallel here?
-            for (chi, ch) in enumerate(chunk):
-                fd = ff(ch)  # time: 38%
-                # get potential spikes
-                psis = df[chi](fd)
-                sis = [i for i in psis if (i - pre) < (csize - overlap)]
-                sws = ef(fd, sis)  # get waveforms
-                chsd = [(si + cs, sw) for (si, sw) in
-                        zip(sis, sws) if (sw is not None)]
-                sd[chi] = chsd
+    njobs = cfg.get('main', 'njobs')
+    assert njobs != 0, "njobs cannot == 0"
+    for chunk, cs, ce in reader.chunk(start, end):
+        sd = joblib.Parallel(njobs)(joblib.delayed(process_chunk)(
+            chi, ch, ff, df[chi], pre, csize, overlap, ef, cs) for
+            (chi, ch) in enumerate(chunk))
+        for (i, d) in enumerate(sd):
+            if len(d):
+                sis, sws = zip(*d)
+                store.create_spikes(i, sis, sws)
                 del sws
-                #sd[chi] += [(si + cs, sw) for (si, sw) in
-                #            zip(sis, sws) if (sw is not None)]
-            # write to file and cleanup
-            for chi in sd:
-                if len(sd[chi]):
-                    sis, sws = zip(*sd[chi])
-                    store.create_spikes(chi, sis, sws)
-                    del sws
-                    sd[chi] = []
+        sd = None
     # these channel indices won't necessarily be the same as before
     # if channels where reordered (see cfg['main']['order'] and indexre)
     info['clustering'] = {}
