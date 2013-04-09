@@ -15,13 +15,21 @@ def from_kwargs(**kwargs):
         fhigh = kwargs['high']
         sr = kwargs['samprate']
         order = kwargs['order']
-        return lambda x: butter.filt(x, flow, fhigh, sr, order), kwargs
+
+        def f(x):
+            return butter.filt(x, flow, fhigh, sr, order)
+        return f, kwargs
+        #return lambda x: butter.filt(x, flow, fhigh, sr, order), kwargs
     elif method == 'wavelet':
         minlvl = kwargs['minlvl']
         maxlvl = kwargs['maxlvl']
         wtype = kwargs['wavelet']
         mode = kwargs['mode']
-        return lambda x: wavelet.filt(x, maxlvl, wtype, mode, minlvl), kwargs
+
+        def f(x):
+            return wavelet.filt(x, maxlvl, wtype, mode, minlvl)
+        return f, kwargs
+        #return lambda x: wavelet.filt(x, maxlvl, wtype, mode, minlvl), kwargs
     else:
         raise ValueError('Unknown filt method: %s' % method)
 

@@ -65,11 +65,17 @@ class SpikeStorage(object):
         else:
             n = self.file.getNode(self._spikes_path)
         for (si, sw) in zip(sis, sws):
-            n.row['channel'] = chi
+            n.row['channel'] = self.convert_channel_index(chi)
             n.row['time'] = si
             n.row['wave'] = sw
             n.row['cluster'] = -1  # stand for 'not clustered'
             n.row.append()
+        if 'fni_to_pos' in n.attrs:
+            chid = n.getAttr('fni_to_pos')
+        else:
+            chid = {}
+        chid[chi] = self.convert_channel_index(chi)
+        n.setAttr('fni_to_pos', chid)
         n.flush()
 
     def load_waves(self, chi):

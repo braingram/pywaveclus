@@ -9,8 +9,12 @@ def from_kwargs(**kwargs):
     if method == 'simple':
         pre = kwargs['pre']
         post = kwargs['post']
-        return lambda data, indices: simple.simple(data, indices, pre, post), \
-            kwargs
+
+        def f(d, i):
+            return simple.simple(d, i, pre, post)
+        return f, kwargs
+        #return lambda data, indices: simple.simple(data, indices, pre, post), \
+        #    kwargs
     elif method == 'cubic':
         raise NotImplementedError
         pre = kwargs['pre']

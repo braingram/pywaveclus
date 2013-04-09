@@ -17,8 +17,13 @@ def from_kwargs(**kwargs):
         sep = (kwargs['separate'] == 'peak')
         pre = kwargs['pre']
         mins = kwargs['minspikes']
-        return lambda x: klustakwik.cluster(x, nf, ft, minc, maxc,
-                                            sep, pre, mins), kwargs
+
+        def f(x):
+            return klustakwik.cluster(x, nf, ft, minc, maxc, sep, pre, mins)
+
+        return f, kwargs
+        #return lambda x: klustakwik.cluster(x, nf, ft, minc, maxc,
+        #                                    sep, pre, mins), kwargs
     elif method in ('spc', 'kmeans', 'gmm'):
         raise NotImplementedError
     else:

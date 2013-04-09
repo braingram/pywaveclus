@@ -47,7 +47,7 @@ def process_session(sdir, ofn='output.h5', full=False):
     indexre = cfg.get('main', 'indexre')
     order = cfg.get('main', 'order')
 
-    def reorder(self, index):
+    def reorder(index):
         fn = fns[index]
         ms = re.findall(indexre, fn)
         assert len(ms) == 1

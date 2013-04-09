@@ -31,8 +31,8 @@ def from_kwargs(baseline, **kwargs):
                 x, T[i], AT[i], direction, ref, minwidth, slop)
 
         return f, info
-        return lambda i, x: threshold.find_spikes(
-            x, T[i], AT[i], direction, ref, minwidth, slop), info
+        #return lambda i, x: threshold.find_spikes(
+        #    x, T[i], AT[i], direction, ref, minwidth, slop), info
     elif method == 'neo':
         raise NotImplementedError
     else:

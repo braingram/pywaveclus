@@ -10,7 +10,11 @@ def from_kwargs(**kwargs):
     method = kwargs.pop('method')
     if method == 'simple':
         tr = kwargs['timerange']
-        return lambda x: simple.simple(x, tr), kwargs
+
+        def f(x):
+            return simple.simple(x, tr)
+        return f, kwargs
+        #return lambda x: simple.simple(x, tr), kwargs
     else:
         raise ValueError('Unknown baseline method: %s' % method)
 
