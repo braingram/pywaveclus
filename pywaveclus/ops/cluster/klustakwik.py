@@ -86,7 +86,7 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
         # if no + or no -, just cluster the other
         if (len(pinds) == 0) or (len(ninds) == 0):
             return cluster(waveforms, nfeatures, featuretype, minclusters, \
-                maxclusters, False, pre, tmp=tmp, quiet=quiet)
+                maxclusters, False, pre, minspikes, tmp=tmp, quiet=quiet)
 
         pwaves = waveforms[pinds]
         nwaves = waveforms[ninds]

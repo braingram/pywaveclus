@@ -141,10 +141,10 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
     # from the main process
     njobs = cfg.get('main', 'njobs')
     assert njobs != 0, "njobs cannot == 0"
-    for chunk, cs, ce in reader.chunk(start, end):
+    for chunk, cs, ce in reader.chunk(start, end):  # 45%
         sd = joblib.Parallel(njobs)(joblib.delayed(process_chunk)(
             chi, ch, ff, df[chi], pre, csize, overlap, ef, cs) for
-            (chi, ch) in enumerate(chunk))
+            (chi, ch) in enumerate(chunk))  # 20%
         for (i, d) in enumerate(sd):
             if len(d):
                 sis, sws = zip(*d)
