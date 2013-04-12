@@ -13,7 +13,13 @@ import pywaveclus
 
 logging.basicConfig(level=logging.DEBUG)
 
-cfg, times, waves, clusters, info = pywaveclus.process.process.process_file()
+if os.path.exists('pywaveclus.ini'):
+    ccfg = os.path.realpath('pywaveclus.ini')
+    print "Found custom cfg:", ccfg
+else:
+    ccfg = None
+cfg, times, waves, clusters, info = pywaveclus.process.process.process_file(
+    customCfg=ccfg)
 
 logging.debug("%i spikes before saving" % len(times))
 
@@ -76,6 +82,10 @@ hdfFile.close()
 if len(times) == 0:
     logging.debug("No spikes found")
     sys.exit(0)
+
+if (not bool(cfg.getint('main', 'plot'))):
+    sys.exit(0)
+
 # generate plots
 logging.debug("Plotting")
 
