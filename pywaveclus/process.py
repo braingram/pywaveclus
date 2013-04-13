@@ -161,4 +161,5 @@ def process_file(info, cfg, reader, ff, df, ef, cf, store):
         info['clustering'][chi] = cinfo
     store.info = info
     store.time_range = (start, end)
+    store.file.flush()
     return store
