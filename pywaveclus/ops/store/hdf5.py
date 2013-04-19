@@ -54,7 +54,7 @@ class SpikeStorage(object):
         if self._stdescription is None:
             class d(tables.IsDescription):
                 channel = tables.UInt8Col()
-                time = tables.Int64Col()
+                time = tables.UInt64Col()
                 wave = tables.Float64Col(shape=(len(sws[0])))
                 cluster = tables.Int8Col()
             self._stdescription = d
