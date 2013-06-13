@@ -11,6 +11,7 @@ import tempfile
 import numpy as np
 
 from . import pca
+from . import simple
 from ... import utils
 
 
@@ -140,7 +141,10 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     outfile = "/".join((tempdir, "k_input.clu.1"))
 
     if featuretype == 'pca':
-        features, pca_info = pca.features(waveforms, nfeatures)
+        features, info = pca.features(waveforms, nfeatures)
+    elif featuretype == 'simple':
+        raise NotImplementedError("Not yet finished")
+        features, info = simple.features(waveforms, pre, nfeatures)
     else:
         raise ValueError("Unknown feature type[%s]" % featuretype)
 
@@ -183,4 +187,4 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
     clusters = sort_clusters(clusters)
 
-    return clusters, pca_info
+    return clusters, info
