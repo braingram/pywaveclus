@@ -12,7 +12,7 @@ CFGDEFAULTS = """
 [main]
 outputdir:
 timerange:
-plot: True
+plot: 0
 verbose:
 filename:
 reference:
