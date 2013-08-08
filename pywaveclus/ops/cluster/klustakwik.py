@@ -61,7 +61,7 @@ def sort_clusters(clusters):
 
 
 def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
-        separate, pre, minspikes, tmp='/tmp', quiet=True):
+        separate, pre, minspikes, tmp='/tmp', quiet=True, clean=True):
     """
     method: klustakwik
     nfeatures: 3
@@ -143,7 +143,6 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
     if featuretype == 'pca':
         features, info = pca.features(waveforms, nfeatures)
     elif featuretype == 'simple':
-        raise NotImplementedError("Not yet finished")
         features, info = simple.features(waveforms, pre, nfeatures)
     else:
         raise ValueError("Unknown feature type[%s]" % featuretype)
@@ -183,7 +182,8 @@ def cluster(waveforms, nfeatures, featuretype, minclusters, maxclusters, \
 
     #np.save("features_%i" % len(features), features)
 
-    shutil.rmtree(tempdir)
+    if clean:
+        shutil.rmtree(tempdir)
 
     clusters = sort_clusters(clusters)
 

@@ -17,6 +17,8 @@ def stack_waveforms(waveforms):
     [index, stacked_form] where stacked_form contains
     the waveform from all channels hstacked
     """
+    if hasattr(waveforms, 'ndim') and waveforms.ndim == 2:
+        return waveforms
     waves = []
     for wave in waveforms:
         wf = np.array([])
